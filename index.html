@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus Strategy — Financial System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-size:14px;background:#F0F2F5;color:#1a1a1a;min-height:100vh}
+.topbar{background:#1F3864;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-title{color:#fff;font-size:16px;font-weight:600;letter-spacing:.01em}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.next-badge{background:#378ADD;color:#fff;font-size:13px;font-weight:600;padding:5px 14px;border-radius:20px;font-family:monospace}
+.topbar-date{color:#AEC6E8;font-size:12px}
+.nav{background:#162b50;display:flex;gap:0;padding:0 16px;overflow-x:auto}
+.nav-btn{padding:11px 18px;color:#AEC6E8;font-size:13px;cursor:pointer;border:none;background:transparent;border-bottom:3px solid transparent;white-space:nowrap;transition:all .15s}
+.nav-btn:hover{color:#fff;background:rgba(255,255,255,.05)}
+.nav-btn.active{color:#fff;border-bottom-color:#378ADD}
+.page{display:none;padding:20px;max-width:1400px;margin:0 auto}
+.page.active{display:block}
+.card{background:#fff;border:1px solid #E8EAF0;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card-title{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid #E8EAF0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi-label{font-size:11px;color:#888;margin-bottom:6px;font-weight:500}
+.kpi-value{font-size:22px;font-weight:700;line-height:1.1}
+.kpi-sub{font-size:11px;color:#888;margin-top:4px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.form-full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:#555;font-weight:600}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1.5px solid #DDE1E7;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a;transition:border .15s}
+.field input:focus,.field select:focus{outline:none;border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,221,.12)}
+.field input[readonly]{background:#F0F4FA;color:#378ADD;font-weight:700;cursor:default;border-color:#C5D8F0}
+.inv-preview{background:linear-gradient(135deg,#E6F1FB,#F0F7FF);border:1.5px solid #B5D4F4;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.inv-preview-num{font-size:28px;font-weight:800;color:#1F3864;font-family:monospace;letter-spacing:.05em}
+.inv-preview-label{font-size:12px;color:#185FA5;font-weight:500}
+.btn-primary{background:#1F3864;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;width:100%;margin-top:8px;transition:background .15s}
+.btn-primary:hover{background:#2E75B6}
+.btn-today{background:#EEF4FB;color:#185FA5;border:1.5px solid #B5D4F4;border-radius:6px;padding:7px 12px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap;transition:all .15s}
+.btn-today:hover{background:#D6E8F8}
+.date-row{display:flex;gap:8px;align-items:flex-end}
+.date-row .field{flex:1}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;cursor:pointer;border:1px solid #DDE1E7;background:#F5F7FA;color:#333;transition:all .15s}
+.btn-sm:hover{background:#E8EAF0}
+.btn-paid{background:#E2EFDA;color:#375623;border-color:#B8D9A8}
+.btn-del{background:#FDECEA;color:#C00000;border-color:#F09595}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#F5F7FA;padding:9px 12px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #E8EAF0;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid #F0F2F5;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFBFF}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.bg-green{background:#E2EFDA;color:#375623}
+.bg-amber{background:#FFF3CD;color:#C07A00}
+.bg-blue{background:#D6E4F0;color:#1F3864}
+.bg-red{background:#FDECEA;color:#C00000}
+.bg-gray{background:#F2F2F2;color:#595959}
+.bg-purple{background:#EDE7F6;color:#4B2D8F}
+.success{background:#E2EFDA;color:#375623;border:1px solid #B8D9A8;border-radius:8px;padding:11px 16px;font-size:13px;margin-bottom:14px;display:none;font-weight:500}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;border:1.5px solid #DDE1E7;background:#fff;color:#555;font-weight:500;transition:all .15s}
+.tab:hover{border-color:#378ADD;color:#378ADD}
+.tab.active{background:#1F3864;color:#fff;border-color:#1F3864}
+.profit-pos{color:#375623;font-weight:700}
+.profit-neg{color:#C00000;font-weight:700}
+.bar-bg{background:#E8EAF0;border-radius:6px;height:12px;overflow:hidden;margin:8px 0}
+.bar-fill{height:100%;border-radius:6px;transition:width .5s,background .5s}
+.empty{text-align:center;padding:48px 20px;color:#888;font-size:13px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.var-month-pill{background:#F5F7FA;border:1px solid #E8EAF0;border-radius:10px;padding:10px 16px;font-size:12px;min-width:120px}
+.section-note{background:#FFF3CD;border:1px solid #F0D070;border-radius:8px;padding:10px 14px;font-size:12px;color:#7A5200;margin-bottom:14px}
+input[type="number"]::-webkit-inner-spin-button{opacity:.4}
+@media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.form-grid-3{grid-template-columns:1fr}.inv-preview-num{font-size:22px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">Nexus Strategy &mdash; Financial System</div>
+  <div class="topbar-right">
+    <div class="next-badge" id="next-badge">Next: 26-001</div>
+    <div class="topbar-date" id="today-display"></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
+  <button class="nav-btn" onclick="showPage('invoices',this)">Invoices</button>
+  <button class="nav-btn" onclick="showPage('costs',this)">Project Costs</button>
+  <button class="nav-btn" onclick="showPage('variable',this)">Variable Costs</button>
+  <button class="nav-btn" onclick="showPage('fixed',this)">Fixed Costs</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="kpi-grid" id="kpi-grid"></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Breakeven progress &mdash; <span id="be-month"></span></div>
+      <div id="be-label" style="font-size:13px;margin-bottom:4px"></div>
+      <div class="bar-bg"><div class="bar-fill" id="be-bar" style="width:0%"></div></div>
+      <div id="be-sub" style="font-size:12px;color:#888;margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Outstanding invoice aging</div>
+      <div id="aging-grid" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Recent invoices</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Invoice No</th><th>Client</th><th>Brand</th><th>Value (LKR)</th><th>Status</th><th>Days Outstanding</th></tr></thead>
+      <tbody id="dash-body"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- INVOICES -->
+<div class="page" id="page-invoices">
+  <div class="success" id="inv-success">Invoice saved successfully! Cost row created automatically.</div>
+  <div class="card">
+    <div class="card-title">Add new invoice</div>
+    <div class="inv-preview">
+      <div>
+        <div class="inv-preview-label">Invoice number &mdash; assigned automatically</div>
+        <div class="inv-preview-num" id="next-inv-num">26-001</div>
+      </div>
+      <div style="font-size:12px;color:#185FA5;text-align:right;max-width:280px">
+        This number is generated automatically.<br>
+        Format: YY-NNN &nbsp;&bull;&nbsp; Increments by 1 each time.<br>
+        Next year it will start at 27-001.
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Date Issued</label>
+        <div class="date-row">
+          <div class="field"><input type="date" id="inv-date"></div>
+          <button class="btn-today" onclick="setToday('inv-date')">Today</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Client / Agency</label>
+        <select id="inv-client">
+          <option value="">Select client...</option>
+          <option>DigiBrush</option><option>DC/CMN</option>
+          <option>SJB</option><option>Jasmin</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Brand</label><input id="inv-brand" placeholder="e.g. BYD, Hutch, JAC, United Motors"></div>
+      <div class="field"><label>Invoice Value (LKR)</label><input type="number" id="inv-value" placeholder="0"></div>
+      <div class="field form-full"><label>Service Description</label><input id="inv-desc" placeholder="Describe the deliverables..."></div>
+      <div class="field"><label>Advance Received (LKR)</label><input type="number" id="inv-advance" placeholder="0"></div>
+      <div class="field">
+        <label>Payment Status</label>
+        <select id="inv-status">
+          <option>Unpaid</option>
+          <option>Advance Received</option>
+          <option>Final Invoice Sent</option>
+          <option>Full Payment Received</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Date Paid (if received)</label>
+        <div class="date-row">
+          <div class="field"><input type="date" id="inv-paid"></div>
+          <button class="btn-today" onclick="setToday('inv-paid')">Today</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Due Date</label>
+        <div class="date-row">
+          <div class="field"><input type="date" id="inv-due"></div>
+          <button class="btn-today" onclick="setToday('inv-due')">Today</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveInvoice()">Save Invoice &mdash; number assigned automatically</button>
+  </div>
+  <div class="card">
+    <div class="card-title">All invoices</div>
+    <div class="tabs">
+      <div class="tab active" onclick="filterInv('all',this)">All</div>
+      <div class="tab" onclick="filterInv('Unpaid',this)">Unpaid</div>
+      <div class="tab" onclick="filterInv('Advance Received',this)">Advance</div>
+      <div class="tab" onclick="filterInv('Final Invoice Sent',this)">Invoice Sent</div>
+      <div class="tab" onclick="filterInv('Full Payment Received',this)">Fully Paid</div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Invoice No</th><th>Date</th><th>Brand</th><th>Client</th><th>Description</th><th>Value (LKR)</th><th>Advance (LKR)</th><th>Balance (LKR)</th><th>Status</th><th>Days Out</th><th>Mark Paid</th><th>Delete</th></tr></thead>
+      <tbody id="inv-body"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- COSTS -->
+<div class="page" id="page-costs">
+  <div class="success" id="cost-success">Costs saved!</div>
+  <div class="section-note">Every invoice has a cost row created automatically when the invoice is saved. Just fill in the numbers and click Save.</div>
+  <div class="card">
+    <div class="card-title">Project costs &mdash; one row per invoice</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Invoice No</th><th>Client</th><th>Invoice Value</th><th>Production</th><th>Equipment</th><th>Transport</th><th>Food &amp; Bev</th><th>FB Pages</th><th>Influencer</th><th>Boosting</th><th>Total Cost</th><th>Gross Profit</th><th>Margin %</th><th>Save</th></tr></thead>
+      <tbody id="cost-body"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- VARIABLE COSTS -->
+<div class="page" id="page-variable">
+  <div class="success" id="var-success">Expense saved!</div>
+  <div class="card">
+    <div class="card-title">Log a variable expense</div>
+    <div class="form-grid-3">
+      <div class="field">
+        <label>Date</label>
+        <div class="date-row">
+          <div class="field"><input type="date" id="var-date"></div>
+          <button class="btn-today" onclick="setToday('var-date')">Today</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="var-cat">
+          <option>Fuel / Transport</option>
+          <option>Office Supplies &amp; Printing</option>
+          <option>Team Meals &amp; Entertainment</option>
+          <option>Ad Hoc Freelancer Payments</option>
+          <option>Software &amp; Subscriptions</option>
+          <option>Marketing &amp; Promotions</option>
+          <option>Other Expenses</option>
+        </select>
+      </div>
+      <div class="field"><label>Amount (LKR)</label><input type="number" id="var-amount" placeholder="0"></div>
+      <div class="field form-full"><label>Description</label><input id="var-desc" placeholder="What was this expense for?"></div>
+    </div>
+    <button class="btn-primary" onclick="saveVar()">Save Expense</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Expense log</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount (LKR)</th><th>Month</th><th>Delete</th></tr></thead>
+      <tbody id="var-body"></tbody>
+    </table></div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid #F0F2F5">
+      <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Monthly totals</div>
+      <div id="var-totals" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FIXED -->
+<div class="page" id="page-fixed">
+  <div class="card">
+    <div class="card-title">Monthly fixed costs</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Category</th><th>Description</th><th>Monthly Amount (LKR)</th><th>Type</th></tr></thead>
+      <tbody id="fixed-body"></tbody>
+      <tfoot><tr>
+        <td colspan="2" style="font-weight:700;padding:11px 12px;background:#F5F7FA;color:#1F3864;font-size:13px">Total Monthly Fixed Costs</td>
+        <td style="font-weight:700;padding:11px 12px;background:#F5F7FA;color:#1F3864;font-size:14px;text-align:right" id="fixed-total"></td>
+        <td style="background:#F5F7FA"></td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+</div>
+
+<script>
+const FIXED=[
+  {cat:"Salaries",desc:"Anuja Vitharama",amt:125000,type:"Fixed"},
+  {cat:"Salaries",desc:"Sasindu",amt:80000,type:"Fixed"},
+  {cat:"Salaries",desc:"Nayana Jayawardena",amt:55000,type:"Fixed"},
+  {cat:"Salaries",desc:"Supun",amt:45000,type:"Fixed"},
+  {cat:"Office/Rent",desc:"One Galle Face - Key Money",amt:140000,type:"Fixed"},
+  {cat:"Office/Rent",desc:"One Galle Face - Rent",amt:170000,type:"Fixed"},
+  {cat:"Loan",desc:"NDB Loan Repayment",amt:155000,type:"Fixed"},
+  {cat:"Freelancers",desc:"Mihindu Fonseka",amt:200000,type:"Fixed"},
+  {cat:"Freelancers",desc:"Janith Mendis",amt:100000,type:"Fixed"},
+  {cat:"Freelancers",desc:"Vibeethaka",amt:126400,type:"Variable"},
+  {cat:"Freelancers",desc:"Manorama",amt:15000,type:"Fixed"},
+  {cat:"Freelancers",desc:"Hamza",amt:40000,type:"Fixed"},
+  {cat:"Contractors",desc:"Shane",amt:400000,type:"Fixed"},
+  {cat:"Contractors",desc:"Vibeethaka (retainer)",amt:400000,type:"Fixed"},
+];
+const FIXED_TOTAL=FIXED.reduce((a,b)=>a+b.amt,0);
+const SB={"Unpaid":"bg-red","Advance Received":"bg-amber","Final Invoice Sent":"bg-blue","Full Payment Received":"bg-green"};
+const CB={"Fuel / Transport":"bg-green","Office Supplies & Printing":"bg-amber","Team Meals & Entertainment":"bg-amber","Ad Hoc Freelancer Payments":"bg-blue","Software & Subscriptions":"bg-purple","Marketing & Promotions":"bg-green","Other Expenses":"bg-gray"};
+
+let INV=[],COSTS={},VARS=[];
+
+const LS={
+  get(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+
+function fmt(n){return Math.round(n||0).toLocaleString("en-LK")}
+function fmtD(d){if(!d)return"-";const dt=new Date(d+"T00:00:00");return dt.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}
+function moOf(d){if(!d)return"";const dt=new Date(d+"T00:00:00");return dt.toLocaleString("en-GB",{month:"short",year:"numeric"})}
+function today(){return new Date().toISOString().slice(0,10)}
+function curMo(){return moOf(today())}
+function daysAgo(d){if(!d)return 0;return Math.floor((Date.now()-new Date(d+"T00:00:00"))/(864e5))}
+function setToday(id){document.getElementById(id).value=today()}
+
+function nextNo(){
+  const yr=new Date().getFullYear().toString().slice(-2);
+  if(!INV.length)return yr+"-001";
+  const nums=INV.map(i=>{const m=i.no.match(/^(\d{2})-(\d{3})$/);return m?+m[2]:0});
+  return yr+"-"+String(Math.max(...nums)+1).padStart(3,"0");
+}
+function refreshBadge(){const n=nextNo();document.getElementById("next-badge").textContent="Next: "+n;const el=document.getElementById("next-inv-num");if(el)el.textContent=n}
+
+function load(){
+  INV=LS.get("nx_inv")||defaultInv();
+  COSTS=LS.get("nx_costs")||defaultCosts();
+  VARS=LS.get("nx_vars")||defaultVars();
+}
+function persist(){LS.set("nx_inv",INV);LS.set("nx_costs",COSTS);LS.set("nx_vars",VARS)}
+
+function flash(id){const el=document.getElementById(id);el.style.display="block";setTimeout(()=>el.style.display="none",3500)}
+
+function showPage(p,btn){
+  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("active"));
+  document.getElementById("page-"+p).classList.add("active");
+  if(btn)btn.classList.add("active");
+  refreshBadge();
+  ({dashboard:renderDash,invoices:()=>renderInv("all"),costs:renderCosts,variable:renderVars,fixed:renderFixed})[p]?.();
+}
+
+function saveInvoice(){
+  const date=document.getElementById("inv-date").value;
+  const client=document.getElementById("inv-client").value;
+  if(!date){alert("Please select a date. Click the date field, then click Today or pick from the calendar.");return}
+  if(!client){alert("Please select a client / agency.");return}
+  const no=nextNo();
+  const inv={no,date,brand:document.getElementById("inv-brand").value.trim(),client,desc:document.getElementById("inv-desc").value.trim(),value:document.getElementById("inv-value").value||"0",advance:document.getElementById("inv-advance").value||"0",status:document.getElementById("inv-status").value,paidDate:document.getElementById("inv-paid").value||null,dueDate:document.getElementById("inv-due").value||null};
+  INV.push(inv);
+  COSTS[no]={invNo:no,invVal:+inv.value,prod:0,equip:0,transport:0,food:0,fb:0,inf:0,boost:0,total:0};
+  persist();
+  ["inv-brand","inv-desc","inv-value","inv-advance","inv-date","inv-paid","inv-due"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("inv-status").value="Unpaid";
+  document.getElementById("inv-client").value="";
+  refreshBadge();flash("inv-success");renderInv("all");renderDash();
+}
+
+function markPaid(no){
+  const i=INV.find(x=>x.no===no);if(!i)return;
+  i.status="Full Payment Received";i.paidDate=today();
+  persist();renderInv("all");renderDash();
+}
+
+function delInv(no){
+  if(!confirm("Delete invoice "+no+"? This also removes the cost row."))return;
+  INV=INV.filter(i=>i.no!==no);delete COSTS[no];
+  persist();refreshBadge();renderInv("all");renderCosts();renderDash();
+}
+
+function renderInv(filter){
+  refreshBadge();
+  let list=filter==="all"?[...INV]:INV.filter(i=>i.status===filter);
+  list.sort((a,b)=>b.no.localeCompare(a.no));
+  document.getElementById("inv-body").innerHTML=list.length?list.map(i=>{
+    const bal=Math.max(0,(+i.value||0)-(+i.advance||0));
+    const paid=i.status==="Full Payment Received";
+    const d=paid?0:daysAgo(i.date);
+    const dc=d>60?"#C00000":d>30?"#C07A00":"#1a1a1a";
+    return`<tr>
+      <td style="font-weight:700;color:#1F3864">${i.no}</td>
+      <td style="white-space:nowrap">${fmtD(i.date)}</td>
+      <td>${i.brand||"-"}</td><td>${i.client}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.desc}">${i.desc||"-"}</td>
+      <td style="text-align:right;font-weight:600">${fmt(+i.value)}</td>
+      <td style="text-align:right">${fmt(+i.advance)}</td>
+      <td style="text-align:right;font-weight:700;color:${bal>0?"#C00000":"#375623"}">${fmt(bal)}</td>
+      <td><span class="badge ${SB[i.status]||"bg-gray"}">${i.status}</span></td>
+      <td style="text-align:center;font-weight:600;color:${dc}">${paid?"-":d+" d"}</td>
+      <td>${paid?"-":`<button class="btn-sm btn-paid" onclick="markPaid(\'${i.no}\')">Mark Paid</button>`}</td>
+      <td><button class="btn-sm btn-del" onclick="delInv(\'${i.no}\')">Del</button></td>
+    </tr>`}).join(""):`<tr><td colspan="12" class="empty">No invoices found</td></tr>`;
+}
+function filterInv(f,el){document.querySelectorAll("#page-invoices .tab").forEach(t=>t.classList.remove("active"));el.classList.add("active");renderInv(f)}
+
+function calcRow(no){
+  const fs=["prod","equip","transport","food","fb","inf","boost"];
+  const total=fs.reduce((a,f)=>{const el=document.getElementById("c_"+no+"_"+f);return a+(el?+el.value||0:0)},0);
+  const inv=INV.find(i=>i.no===no);const val=inv?+inv.value||0:0;
+  const profit=val-total;const margin=val>0?Math.round(profit/val*100):0;
+  const ct=document.getElementById("ct_"+no);const cp=document.getElementById("cp_"+no);const cm=document.getElementById("cm_"+no);
+  if(ct)ct.textContent=fmt(total);
+  if(cp){cp.textContent=fmt(profit);cp.className=profit>=0?"profit-pos":"profit-neg"}
+  if(cm)cm.textContent=margin+"%";
+}
+function saveCost(no){
+  const fs=["prod","equip","transport","food","fb","inf","boost"];
+  const inv=INV.find(i=>i.no===no);
+  const row={invNo:no,invVal:inv?+inv.value||0:0};
+  fs.forEach(f=>{const el=document.getElementById("c_"+no+"_"+f);row[f]=el?+el.value||0:0});
+  row.total=fs.reduce((a,f)=>a+row[f],0);
+  COSTS[no]=row;persist();calcRow(no);flash("cost-success");renderDash();
+}
+function renderCosts(){
+  const sorted=[...INV].sort((a,b)=>b.no.localeCompare(a.no));
+  document.getElementById("cost-body").innerHTML=sorted.map(inv=>{
+    const c=COSTS[inv.no]||{};
+    const fs=["prod","equip","transport","food","fb","inf","boost"];
+    const inputs=fs.map(f=>`<td><input type="number" style="width:76px;padding:4px 7px;border:1px solid #DDE1E7;border-radius:5px;font-size:11px;background:#fff" id="c_${inv.no}_${f}" value="${c[f]||""}" placeholder="0" oninput="calcRow(\'${inv.no}\')"></td>`).join("");
+    const t=c.total||0;const v=+inv.value||0;const p=v-t;const m=v>0?Math.round(p/v*100):0;
+    return`<tr>
+      <td style="font-weight:700;color:#1F3864;white-space:nowrap">${inv.no}</td>
+      <td style="white-space:nowrap">${inv.client}</td>
+      <td style="text-align:right;font-weight:600;white-space:nowrap">${fmt(v)}</td>
+      ${inputs}
+      <td style="text-align:right;font-weight:700;white-space:nowrap" id="ct_${inv.no}">${fmt(t)}</td>
+      <td style="text-align:right;white-space:nowrap" class="${p>=0?"profit-pos":"profit-neg"}" id="cp_${inv.no}">${fmt(p)}</td>
+      <td style="text-align:center;font-weight:700" id="cm_${inv.no}">${m}%</td>
+      <td><button class="btn-sm" onclick="saveCost(\'${inv.no}\')">Save</button></td>
+    </tr>`}).join("");
+}
+
+function saveVar(){
+  const date=document.getElementById("var-date").value;
+  const amount=document.getElementById("var-amount").value;
+  if(!date){alert("Please select a date.");return}
+  if(!amount||+amount<=0){alert("Please enter an amount greater than 0.");return}
+  VARS.push({date,cat:document.getElementById("var-cat").value,desc:document.getElementById("var-desc").value.trim(),amount:+amount});
+  persist();
+  ["var-date","var-amount","var-desc"].forEach(id=>document.getElementById(id).value="");
+  flash("var-success");renderVars();renderDash();
+}
+function delVar(i){VARS.splice(i,1);persist();renderVars();renderDash()}
+function renderVars(){
+  const sorted=[...VARS].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("var-body").innerHTML=sorted.length?sorted.map((v,i)=>`
+    <tr>
+      <td style="white-space:nowrap">${fmtD(v.date)}</td>
+      <td><span class="badge ${CB[v.cat]||"bg-gray"}">${v.cat}</span></td>
+      <td>${v.desc||"-"}</td>
+      <td style="text-align:right;font-weight:600">${fmt(+v.amount)}</td>
+      <td style="color:#888">${moOf(v.date)}</td>
+      <td><button class="btn-sm btn-del" onclick="delVar(${i})">Del</button></td>
+    </tr>`).join(""):`<tr><td colspan="6" class="empty">No expenses logged yet</td></tr>`;
+  const byMo={};
+  VARS.forEach(v=>{const m=moOf(v.date);byMo[m]=(byMo[m]||0)+(+v.amount||0)});
+  document.getElementById("var-totals").innerHTML=Object.entries(byMo).sort((a,b)=>new Date("01 "+b[0])-new Date("01 "+a[0])).map(([m,t])=>`<div class="var-month-pill"><div style="color:#888;font-size:11px">${m}</div><div style="font-weight:700;color:#4B2D8F;font-size:14px">LKR ${fmt(t)}</div></div>`).join("")||"<span style=\"color:#888;font-size:12px\">No data yet</span>";
+}
+
+function renderFixed(){
+  document.getElementById("fixed-body").innerHTML=FIXED.map(f=>`<tr><td style="color:#555">${f.cat}</td><td style="font-weight:600">${f.desc}</td><td style="text-align:right;font-weight:600">${fmt(f.amt)}</td><td><span class="badge ${f.type==="Fixed"?"bg-blue":"bg-amber"}">${f.type}</span></td></tr>`).join("");
+  document.getElementById("fixed-total").textContent="LKR "+fmt(FIXED_TOTAL);
+}
+
+function renderDash(){
+  const mo=curMo();
+  const moInvs=INV.filter(i=>moOf(i.date)===mo);
+  const totInv=moInvs.reduce((a,b)=>a+(+b.value||0),0);
+  const totColl=INV.filter(i=>i.paidDate&&moOf(i.paidDate)===mo).reduce((a,b)=>a+(+b.value||0),0);
+  const totOut=INV.filter(i=>i.status!=="Full Payment Received").reduce((a,b)=>a+Math.max(0,(+b.value||0)-(+b.advance||0)),0);
+  const allC=Object.values(COSTS);
+  const totCostVal=allC.reduce((a,b)=>a+(+b.total||0),0);
+  const totRevC=allC.reduce((a,b)=>a+(+b.invVal||0),0);
+  const gm=totRevC>0?((totRevC-totCostVal)/totRevC*100):0;
+  const moVar=VARS.filter(v=>moOf(v.date)===mo).reduce((a,b)=>a+(+b.amount||0),0);
+  const netP=totInv-totCostVal-FIXED_TOTAL-moVar;
+  refreshBadge();
+  const nextN=nextNo();
+  document.getElementById("kpi-grid").innerHTML=[
+    {l:"Total Invoiced - "+mo,v:"LKR "+fmt(totInv),s:moInvs.length+" invoices",c:"#1F3864"},
+    {l:"Collected - "+mo,v:"LKR "+fmt(totColl),s:totInv>0?Math.round(totColl/totInv*100)+"% collection rate":"",c:totColl>0?"#375623":"#C00000"},
+    {l:"Total Outstanding",v:"LKR "+fmt(totOut),s:INV.filter(i=>i.status!=="Full Payment Received").length+" unpaid invoices",c:"#C00000"},
+    {l:"Gross Margin (costed jobs)",v:Math.round(gm)+"%",s:gm>=40?"Above 40% target":"Below 40% - needs attention",c:gm>=40?"#375623":"#C07A00"},
+    {l:"Variable Costs - "+mo,v:"LKR "+fmt(moVar),s:VARS.filter(v=>moOf(v.date)===mo).length+" entries",c:"#4B2D8F"},
+    {l:"Fixed Costs / Month",v:"LKR "+fmt(FIXED_TOTAL),s:"Breakeven ~LKR "+fmt(FIXED_TOTAL/0.5),c:"#C07A00"},
+    {l:"True Net Profit / Loss",v:"LKR "+fmt(netP),s:"Revenue minus all costs",c:netP>=0?"#375623":"#C00000"},
+    {l:"Next Invoice Number",v:nextN,s:"Auto-assigned on save",c:"#185FA5"},
+  ].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join("");
+  document.getElementById("be-month").textContent=mo;
+  const beT=FIXED_TOTAL+moVar;
+  const bePct=beT>0?Math.min(100,Math.round(totColl/beT*100)):0;
+  document.getElementById("be-label").innerHTML=`<strong>LKR ${fmt(totColl)}</strong> <span style="color:#888">collected of LKR ${fmt(beT)} needed</span>`;
+  const bar=document.getElementById("be-bar");
+  bar.style.width=bePct+"%";bar.style.background=bePct>=100?"#375623":bePct>=60?"#C07A00":"#C00000";
+  document.getElementById("be-sub").textContent=bePct>=100?"Breakeven achieved this month!":"Need LKR "+fmt(Math.max(0,beT-totColl))+" more to break even ("+bePct+"% there)";
+  const aging={"0-30 days":0,"31-60 days":0,"61-90 days":0,"90+ days":0};
+  const agC={"0-30 days":"#375623","31-60 days":"#C07A00","61-90 days":"#C00000","90+ days":"#7B0000"};
+  INV.filter(i=>i.status!=="Full Payment Received").forEach(i=>{
+    const d=daysAgo(i.date);const b=Math.max(0,(+i.value||0)-(+i.advance||0));
+    if(d<=30)aging["0-30 days"]+=b;else if(d<=60)aging["31-60 days"]+=b;else if(d<=90)aging["61-90 days"]+=b;else aging["90+ days"]+=b;
+  });
+  document.getElementById("aging-grid").innerHTML=Object.entries(aging).map(([k,v])=>`<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:${agC[k]};font-weight:600">${k}</span><span style="font-size:14px;font-weight:700">LKR ${fmt(v)}</span></div>`).join("");
+  const recent=[...INV].sort((a,b)=>b.no.localeCompare(a.no)).slice(0,8);
+  document.getElementById("dash-body").innerHTML=recent.map(i=>`<tr>
+    <td style="font-weight:700;color:#1F3864">${i.no}</td>
+    <td>${i.client}</td><td>${i.brand||"-"}</td>
+    <td style="text-align:right;font-weight:600">LKR ${fmt(+i.value)}</td>
+    <td><span class="badge ${SB[i.status]||"bg-gray"}">${i.status}</span></td>
+    <td style="text-align:center;color:${daysAgo(i.date)>60?"#C00000":"#1a1a1a"}">${i.status==="Full Payment Received"?"-":daysAgo(i.date)+" days"}</td>
+  </tr>`).join("");
+}
+
+function defaultInv(){return[
+  {no:"26-001",date:"2026-01-04",brand:"Digi Brush",client:"DigiBrush",desc:"Graphic Contents",value:"60000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
+  {no:"26-002",date:"2026-01-05",brand:"Dimo",client:"DigiBrush",desc:"Third Party Community Pages Content Campaign",value:"370000",advance:"370000",status:"Advance Received",paidDate:null,dueDate:null},
+  {no:"26-003",date:"2026-01-17",brand:"BYD",client:"DigiBrush",desc:"NEV Year Video Productions with Influencers",value:"450000",advance:"450000",status:"Advance Received",paidDate:null,dueDate:null},
+  {no:"26-004",date:"2026-01-19",brand:"DC/CMN",client:"DC/CMN",desc:"Feeding Comments",value:"10000",advance:"10000",status:"Full Payment Received",paidDate:"2026-01-25",dueDate:null},
+  {no:"26-005",date:"2026-01-23",brand:"Hutch",client:"DigiBrush",desc:"Hutch DVC",value:"60000",advance:"60000",status:"Advance Received",paidDate:null,dueDate:null},
+  {no:"26-006",date:"2026-01-26",brand:"SJB",client:"SJB",desc:"Graphics Video Edits and Animations - Focal Point YT Program",value:"47000",advance:"47000",status:"Advance Received",paidDate:null,dueDate:null},
+  {no:"26-007",date:"2026-01-30",brand:"Jasmin",client:"Jasmin",desc:"Seeking Facebook Comments",value:"50000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
+  {no:"26-008",date:"2026-01-30",brand:"Nestle",client:"Jasmin",desc:"Facebook Comments Feeding - Nangrow",value:"60000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
+  {no:"26-009",date:"2026-01-30",brand:"Hutch",client:"DigiBrush",desc:"Comment Army - Hutch",value:"85000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
+  {no:"26-010",date:"2026-01-30",brand:"Keells",client:"DigiBrush",desc:"Keells Nexus App Shoot",value:"325000",advance:"325000",status:"Advance Received",paidDate:null,dueDate:null},
+  {no:"26-011",date:"2026-02-04",brand:"BYD",client:"DigiBrush",desc:"BYD Comments",value:"250000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
+  {no:"26-012",date:"2026-02-05",brand:"Hutch",client:"DigiBrush",desc:"Hutch Event - Pettah",value:"100000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
+  {no:"26-013",date:"2026-02-09",brand:"Digi Brush",client:"DigiBrush",desc:"Graphic Contents",value:"60000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
+  {no:"26-014",date:"2026-02-15",brand:"JAC",client:"DigiBrush",desc:"JAC Monthly Content Development January",value:"150000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-015",date:"2026-02-09",brand:"JAC",client:"DigiBrush",desc:"JAC Monthly Content Development February",value:"150000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-016",date:"2026-02-13",brand:"JAC",client:"DigiBrush",desc:"JAC T9 Owner Meetup Event Coverage",value:"305000",advance:"52500",status:"Advance Received",paidDate:null,dueDate:null},
+  {no:"26-017",date:"2026-02-20",brand:"Kothmale",client:"DigiBrush",desc:"Kothmale Iron Kids Event Coverage and Production",value:"175000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-018",date:"2026-02-20",brand:"Ride",client:"DigiBrush",desc:"Iron Men",value:"225000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-019",date:"2026-02-23",brand:"Commercial Bank",client:"DC/CMN",desc:"Campaign",value:"656000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-020",date:"2026-02-26",brand:"Hutch",client:"DigiBrush",desc:"Comment Army",value:"85000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-021",date:"2026-03-04",brand:"Kothmale",client:"DigiBrush",desc:"Kothmale Iron Kids Additional 5 Videos",value:"45000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-022",date:"2026-03-04",brand:"United Motors",client:"DigiBrush",desc:"United Motors EV Campaign Teaser",value:"550000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-023",date:"2026-03-04",brand:"United Motors",client:"DigiBrush",desc:"United Motors EV Campaign Auto Vision",value:"600000",advance:"600000",status:"Full Payment Received",paidDate:"2026-03-10",dueDate:null},
+  {no:"26-024",date:"2026-03-09",brand:"BYD",client:"DigiBrush",desc:"BYD Patrol Que Video",value:"84600",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-025",date:"2026-03-09",brand:"BYD",client:"DigiBrush",desc:"BYD Atto 1 Video",value:"157000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+  {no:"26-026",date:"2026-03-09",brand:"SJB",client:"SJB",desc:"Voice Recordings",value:"35000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
+  {no:"26-027",date:"2026-03-11",brand:"Commercial Bank",client:"DC/CMN",desc:"Commercial Comments",value:"23000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
+]}
+
+function defaultCosts(){return{
+  "26-022":{invNo:"26-022",invVal:550000,prod:0,equip:7000,transport:7000,food:0,fb:150000,inf:0,boost:90000,total:254000},
+  "26-023":{invNo:"26-023",invVal:600000,prod:319000,equip:0,transport:2000,food:0,fb:0,inf:0,boost:0,total:321000},
+  "26-024":{invNo:"26-024",invVal:84600,prod:0,equip:0,transport:0,food:0,fb:45000,inf:0,boost:9600,total:54600},
+  "26-025":{invNo:"26-025",invVal:157000,prod:0,equip:0,transport:0,food:0,fb:75000,inf:0,boost:32000,total:107000},
+}}
+
+function defaultVars(){return[
+  {date:"2026-02-01",cat:"Fuel / Transport",desc:"Fuel - JAC Meeting",amount:2000},
+  {date:"2026-02-01",cat:"Marketing & Promotions",desc:"Meta Boosting - General",amount:9630},
+  {date:"2026-02-03",cat:"Team Meals & Entertainment",desc:"JAC Big Match - Food and Bev",amount:7490},
+  {date:"2026-02-05",cat:"Ad Hoc Freelancer Payments",desc:"Loan Settle - Anuja",amount:1500},
+  {date:"2026-02-08",cat:"Fuel / Transport",desc:"Fuel - Auto Vision",amount:2000},
+  {date:"2026-02-10",cat:"Other Expenses",desc:"Loan to Nexus",amount:60000},
+  {date:"2026-02-12",cat:"Team Meals & Entertainment",desc:"7M Opening",amount:10000},
+  {date:"2026-02-12",cat:"Team Meals & Entertainment",desc:"Nira Opening",amount:10000},
+  {date:"2026-02-15",cat:"Fuel / Transport",desc:"Fuel - NCW",amount:2000},
+  {date:"2026-02-18",cat:"Fuel / Transport",desc:"Fuel - JAC Trucks Shoot",amount:2000},
+  {date:"2026-02-18",cat:"Team Meals & Entertainment",desc:"JAC T9 Shoot - Food and Bev",amount:1000},
+  {date:"2026-02-20",cat:"Office Supplies & Printing",desc:"Gimbal Rentals 3 Days",amount:12000},
+  {date:"2026-02-01",cat:"Team Meals & Entertainment",desc:"Cake",amount:3780},
+  {date:"2026-03-01",cat:"Ad Hoc Freelancer Payments",desc:"Pending Sithum KFC",amount:190000},
+  {date:"2026-03-01",cat:"Ad Hoc Freelancer Payments",desc:"Pending Ride Story Edits",amount:13000},
+]}
+
+load();
+document.getElementById("today-display").textContent=new Date().toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"long",year:"numeric"});
+refreshBadge();
+renderDash();
+renderFixed();
+</script>
+</body>
+</html>
