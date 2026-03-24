@@ -4,62 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nexus Strategy — Financial System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-size:14px;background:#F0F2F5;color:#1a1a1a;min-height:100vh}
-.topbar{background:#1F3864;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.topbar-title{color:#fff;font-size:16px;font-weight:600;letter-spacing:.01em}
-.topbar-right{display:flex;align-items:center;gap:16px}
-.next-badge{background:#378ADD;color:#fff;font-size:13px;font-weight:600;padding:5px 14px;border-radius:20px;font-family:monospace}
+.topbar{background:#1F3864;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.topbar-title{color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.next-badge{background:#378ADD;color:#fff;font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px;font-family:monospace}
 .topbar-date{color:#AEC6E8;font-size:12px}
-.nav{background:#162b50;display:flex;gap:0;padding:0 16px;overflow-x:auto}
-.nav-btn{padding:11px 18px;color:#AEC6E8;font-size:13px;cursor:pointer;border:none;background:transparent;border-bottom:3px solid transparent;white-space:nowrap;transition:all .15s}
-.nav-btn:hover{color:#fff;background:rgba(255,255,255,.05)}
+.sync-btn{background:rgba(255,255,255,.15);color:#fff;font-size:12px;padding:5px 12px;border-radius:20px;cursor:pointer;border:none;font-family:inherit;display:flex;align-items:center;gap:5px}
+.sync-btn:hover{background:rgba(255,255,255,.25)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;display:inline-block}
+.sync-dot.syncing{background:#F0D070;animation:pulse 1s infinite}
+.sync-dot.error{background:#E24B4A}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.nav{background:#162b50;display:flex;padding:0 16px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{padding:11px 18px;color:#AEC6E8;font-size:13px;cursor:pointer;border:none;background:transparent;border-bottom:3px solid transparent;white-space:nowrap;transition:all .15s;font-weight:500}
+.nav-btn:hover{color:#fff}
 .nav-btn.active{color:#fff;border-bottom-color:#378ADD}
-.page{display:none;padding:20px;max-width:1400px;margin:0 auto}
+.page{display:none;padding:20px;max-width:1500px;margin:0 auto}
 .page.active{display:block}
-.card{background:#fff;border:1px solid #E8EAF0;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.card-title{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+.card{background:#fff;border:1px solid #E8EAF0;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.card-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
 .kpi{background:#fff;border:1px solid #E8EAF0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.kpi-label{font-size:11px;color:#888;margin-bottom:6px;font-weight:500}
-.kpi-value{font-size:22px;font-weight:700;line-height:1.1}
+.kpi-label{font-size:11px;color:#888;margin-bottom:5px;font-weight:500}
+.kpi-value{font-size:21px;font-weight:800;line-height:1.1}
 .kpi-sub{font-size:11px;color:#888;margin-top:4px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.form-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
 .form-full{grid-column:1/-1}
 .field{display:flex;flex-direction:column;gap:5px}
 .field label{font-size:12px;color:#555;font-weight:600}
-.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1.5px solid #DDE1E7;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a;transition:border .15s}
-.field input:focus,.field select:focus{outline:none;border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,221,.12)}
-.field input[readonly]{background:#F0F4FA;color:#378ADD;font-weight:700;cursor:default;border-color:#C5D8F0}
-.inv-preview{background:linear-gradient(135deg,#E6F1FB,#F0F7FF);border:1.5px solid #B5D4F4;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
-.inv-preview-num{font-size:28px;font-weight:800;color:#1F3864;font-family:monospace;letter-spacing:.05em}
-.inv-preview-label{font-size:12px;color:#185FA5;font-weight:500}
-.btn-primary{background:#1F3864;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;width:100%;margin-top:8px;transition:background .15s}
-.btn-primary:hover{background:#2E75B6}
-.btn-today{background:#EEF4FB;color:#185FA5;border:1.5px solid #B5D4F4;border-radius:6px;padding:7px 12px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap;transition:all .15s}
-.btn-today:hover{background:#D6E8F8}
+.field input,.field select{width:100%;padding:9px 12px;border:1.5px solid #DDE1E7;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a1a;transition:border .15s}
+.field input:focus,.field select:focus{outline:none;border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,221,.1)}
 .date-row{display:flex;gap:8px;align-items:flex-end}
 .date-row .field{flex:1}
-.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;cursor:pointer;border:1px solid #DDE1E7;background:#F5F7FA;color:#333;transition:all .15s}
+.inv-preview{background:#EEF4FB;border:1.5px solid #B5D4F4;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.inv-num{font-size:30px;font-weight:800;color:#1F3864;font-family:monospace;letter-spacing:.06em}
+.btn{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:#1F3864;color:#fff}
+.btn-primary:hover{background:#2E75B6}
+.btn-primary:disabled{background:#aaa;cursor:not-allowed}
+.btn-full{width:100%;display:block;text-align:center;margin-top:8px;padding:12px}
+.btn-today{background:#EEF4FB;color:#185FA5;border:1.5px solid #B5D4F4;border-radius:6px;padding:7px 12px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:6px;cursor:pointer;border:1px solid #DDE1E7;background:#F5F7FA;color:#333;font-weight:500}
 .btn-sm:hover{background:#E8EAF0}
-.btn-paid{background:#E2EFDA;color:#375623;border-color:#B8D9A8}
-.btn-del{background:#FDECEA;color:#C00000;border-color:#F09595}
+.btn-green{background:#E2EFDA;color:#375623;border-color:#B8D9A8}
+.btn-red{background:#FDECEA;color:#C00000;border-color:#F09595}
+.btn-blue{background:#D6E4F0;color:#1F3864;border-color:#9ABCD8}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#F5F7FA;padding:9px 12px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #E8EAF0;white-space:nowrap}
-td{padding:9px 12px;border-bottom:1px solid #F0F2F5;vertical-align:middle}
+th{background:#F5F7FA;padding:9px 11px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #E8EAF0;white-space:nowrap;font-size:11px}
+td{padding:8px 11px;border-bottom:1px solid #F0F2F5;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#FAFBFF}
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
 .bg-green{background:#E2EFDA;color:#375623}
 .bg-amber{background:#FFF3CD;color:#C07A00}
 .bg-blue{background:#D6E4F0;color:#1F3864}
 .bg-red{background:#FDECEA;color:#C00000}
 .bg-gray{background:#F2F2F2;color:#595959}
 .bg-purple{background:#EDE7F6;color:#4B2D8F}
+.bg-teal{background:#D0EFED;color:#1D7874}
 .success{background:#E2EFDA;color:#375623;border:1px solid #B8D9A8;border-radius:8px;padding:11px 16px;font-size:13px;margin-bottom:14px;display:none;font-weight:500}
+.info-note{background:#EEF4FB;border:1px solid #B5D4F4;border-radius:8px;padding:10px 14px;font-size:12px;color:#185FA5;margin-bottom:14px}
+.loading-bar{background:#FFF3CD;border:1px solid #F0D070;border-radius:8px;padding:10px 14px;font-size:12px;color:#7A5200;margin-bottom:14px}
 .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .tab{padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;border:1.5px solid #DDE1E7;background:#fff;color:#555;font-weight:500;transition:all .15s}
 .tab:hover{border-color:#378ADD;color:#378ADD}
@@ -70,128 +83,118 @@ tr:hover td{background:#FAFBFF}
 .bar-fill{height:100%;border-radius:6px;transition:width .5s,background .5s}
 .empty{text-align:center;padding:48px 20px;color:#888;font-size:13px}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.var-month-pill{background:#F5F7FA;border:1px solid #E8EAF0;border-radius:10px;padding:10px 16px;font-size:12px;min-width:120px}
-.section-note{background:#FFF3CD;border:1px solid #F0D070;border-radius:8px;padding:10px 14px;font-size:12px;color:#7A5200;margin-bottom:14px}
-input[type="number"]::-webkit-inner-spin-button{opacity:.4}
-@media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}}
-@media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.form-grid-3{grid-template-columns:1fr}.inv-preview-num{font-size:22px}}
+.chart-wrap{position:relative;height:260px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:min(640px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.modal-title{font-size:16px;font-weight:700;color:#1F3864;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid #E8EAF0}
+.modal-close{float:right;cursor:pointer;color:#888;font-size:20px;line-height:1;margin-left:8px}
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.client-card{background:#fff;border:1px solid #E8EAF0;border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.client-card:hover{border-color:#378ADD;box-shadow:0 2px 8px rgba(55,138,221,.15)}
+.client-name{font-size:15px;font-weight:700;color:#1F3864;margin-bottom:8px}
+.client-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.client-stat{background:#F5F7FA;border-radius:6px;padding:8px;text-align:center}
+.client-stat-val{font-size:14px;font-weight:700}
+.client-stat-lbl{font-size:10px;color:#888;margin-top:2px}
+.year-tabs{display:flex;gap:6px}
+.year-tab{padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #DDE1E7;background:#fff;color:#555;transition:all .15s}
+.year-tab.active{background:#1F3864;color:#fff;border-color:#1F3864}
+.month-table th{background:#1F3864;color:#fff;font-size:11px}
+.month-total td{background:#F5F7FA;font-weight:700;color:#1F3864}
+@media print{.topbar,.nav,.no-print{display:none!important}.page{display:block!important}.page:not(#page-reports){display:none!important}#page-reports{display:block!important;padding:0}.card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}body{background:#fff}}
+@media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.form-grid-3,.form-grid-4{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-title">Nexus Strategy &mdash; Financial System</div>
+  <div class="topbar-title">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="#378ADD"/><path d="M6 20V13l8-5 8 5v7h-5v-6h-2v6H6z" fill="#fff"/></svg>
+    Nexus Strategy &mdash; Financial System
+  </div>
   <div class="topbar-right">
     <div class="next-badge" id="next-badge">Next: 26-001</div>
     <div class="topbar-date" id="today-display"></div>
+    <button class="sync-btn" onclick="syncAll()"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Synced</span></button>
   </div>
 </div>
-
 <div class="nav">
   <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
   <button class="nav-btn" onclick="showPage('invoices',this)">Invoices</button>
   <button class="nav-btn" onclick="showPage('costs',this)">Project Costs</button>
   <button class="nav-btn" onclick="showPage('variable',this)">Variable Costs</button>
   <button class="nav-btn" onclick="showPage('fixed',this)">Fixed Costs</button>
+  <button class="nav-btn" onclick="showPage('clients',this)">Clients</button>
+  <button class="nav-btn" onclick="showPage('monthly',this)">Monthly &amp; Yearly</button>
+  <button class="nav-btn" onclick="showPage('cashflow',this)">Cash Flow</button>
+  <button class="nav-btn" onclick="showPage('reports',this)">Reports</button>
 </div>
 
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
   <div class="kpi-grid" id="kpi-grid"></div>
-  <div class="two-col">
+  <div class="two-col" style="margin-bottom:16px">
     <div class="card">
       <div class="card-title">Breakeven progress &mdash; <span id="be-month"></span></div>
       <div id="be-label" style="font-size:13px;margin-bottom:4px"></div>
-      <div class="bar-bg"><div class="bar-fill" id="be-bar" style="width:0%"></div></div>
+      <div class="bar-bg"><div class="bar-fill" id="be-bar"></div></div>
       <div id="be-sub" style="font-size:12px;color:#888;margin-top:6px"></div>
     </div>
-    <div class="card">
-      <div class="card-title">Outstanding invoice aging</div>
-      <div id="aging-grid" style="display:flex;flex-direction:column;gap:10px"></div>
-    </div>
+    <div class="card"><div class="card-title">Outstanding aging</div><div id="aging-grid" style="display:flex;flex-direction:column;gap:10px"></div></div>
   </div>
-  <div class="card">
-    <div class="card-title">Recent invoices</div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Invoice No</th><th>Client</th><th>Brand</th><th>Value (LKR)</th><th>Status</th><th>Days Outstanding</th></tr></thead>
-      <tbody id="dash-body"></tbody>
-    </table></div>
+  <div class="two-col" style="margin-bottom:16px">
+    <div class="card"><div class="card-title">Revenue vs costs &mdash; last 6 months</div><div class="chart-wrap"><canvas id="chart-rev"></canvas></div></div>
+    <div class="card"><div class="card-title">Gross margin % trend</div><div class="chart-wrap"><canvas id="chart-margin"></canvas></div></div>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Invoiced vs collected &mdash; this year</div><div class="chart-wrap"><canvas id="chart-invcoll"></canvas></div></div>
+    <div class="card"><div class="card-title">Revenue by client</div><div class="chart-wrap"><canvas id="chart-client"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="card-title">Recent invoices</div>
+    <div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Client</th><th>Brand</th><th>Value (LKR)</th><th>Status</th><th>Days Out</th></tr></thead><tbody id="dash-body"></tbody></table></div>
   </div>
 </div>
 
 <!-- INVOICES -->
 <div class="page" id="page-invoices">
-  <div class="success" id="inv-success">Invoice saved successfully! Cost row created automatically.</div>
-  <div class="card">
-    <div class="card-title">Add new invoice</div>
+  <div class="success" id="inv-success">&#10003; Invoice saved to Google Sheets!</div>
+  <div class="card no-print">
+    <div class="card-title">New invoice</div>
     <div class="inv-preview">
-      <div>
-        <div class="inv-preview-label">Invoice number &mdash; assigned automatically</div>
-        <div class="inv-preview-num" id="next-inv-num">26-001</div>
-      </div>
-      <div style="font-size:12px;color:#185FA5;text-align:right;max-width:280px">
-        This number is generated automatically.<br>
-        Format: YY-NNN &nbsp;&bull;&nbsp; Increments by 1 each time.<br>
-        Next year it will start at 27-001.
-      </div>
+      <div><div style="font-size:12px;color:#185FA5;font-weight:500;margin-bottom:4px">Auto-generated invoice number</div><div class="inv-num" id="next-inv-num">26-001</div></div>
+      <div style="font-size:12px;color:#185FA5;text-align:right">Format: YY-NNN &bull; Increments automatically<br>Next year starts at 27-001</div>
     </div>
     <div class="form-grid">
-      <div class="field">
-        <label>Date Issued</label>
-        <div class="date-row">
-          <div class="field"><input type="date" id="inv-date"></div>
-          <button class="btn-today" onclick="setToday('inv-date')">Today</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>Client / Agency</label>
-        <select id="inv-client">
-          <option value="">Select client...</option>
-          <option>DigiBrush</option><option>DC/CMN</option>
-          <option>SJB</option><option>Jasmin</option><option>Other</option>
-        </select>
-      </div>
-      <div class="field"><label>Brand</label><input id="inv-brand" placeholder="e.g. BYD, Hutch, JAC, United Motors"></div>
+      <div class="field"><label>Date Issued</label><div class="date-row"><div class="field"><input type="date" id="inv-date"></div><button class="btn-today" onclick="setToday('inv-date')">Today</button></div></div>
+      <div class="field"><label>Client / Agency <button class="btn-sm btn-blue" style="margin-left:8px;font-size:10px" onclick="openModal('modal-add-client')">+ Add new</button></label><select id="inv-client"><option value="">Select client...</option></select></div>
+      <div class="field"><label>Brand</label><input id="inv-brand" placeholder="e.g. BYD, Hutch, JAC"></div>
       <div class="field"><label>Invoice Value (LKR)</label><input type="number" id="inv-value" placeholder="0"></div>
       <div class="field form-full"><label>Service Description</label><input id="inv-desc" placeholder="Describe the deliverables..."></div>
       <div class="field"><label>Advance Received (LKR)</label><input type="number" id="inv-advance" placeholder="0"></div>
-      <div class="field">
-        <label>Payment Status</label>
-        <select id="inv-status">
-          <option>Unpaid</option>
-          <option>Advance Received</option>
-          <option>Final Invoice Sent</option>
-          <option>Full Payment Received</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Date Paid (if received)</label>
-        <div class="date-row">
-          <div class="field"><input type="date" id="inv-paid"></div>
-          <button class="btn-today" onclick="setToday('inv-paid')">Today</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>Due Date</label>
-        <div class="date-row">
-          <div class="field"><input type="date" id="inv-due"></div>
-          <button class="btn-today" onclick="setToday('inv-due')">Today</button>
-        </div>
-      </div>
+      <div class="field"><label>Payment Status</label><select id="inv-status"><option>Unpaid</option><option>Advance Received</option><option>Fully Paid</option></select></div>
+      <div class="field"><label>Date Payment Received</label><div class="date-row"><div class="field"><input type="date" id="inv-paid"></div><button class="btn-today" onclick="setToday('inv-paid')">Today</button></div></div>
+      <div class="field"><label>Due Date</label><div class="date-row"><div class="field"><input type="date" id="inv-due"></div><button class="btn-today" onclick="setToday('inv-due')">Today</button></div></div>
     </div>
-    <button class="btn-primary" onclick="saveInvoice()">Save Invoice &mdash; number assigned automatically</button>
+    <button class="btn btn-primary btn-full" id="inv-save-btn" onclick="saveInvoice()">Save Invoice to Google Sheets</button>
   </div>
   <div class="card">
-    <div class="card-title">All invoices</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-title" style="margin:0">All invoices</div>
+      <div style="display:flex;gap:8px">
+        <select id="filter-client-inv" onchange="renderInv(currentInvFilter)" style="padding:5px 10px;border:1px solid #DDE1E7;border-radius:6px;font-size:12px"><option value="">All clients</option></select>
+        <select id="filter-year-inv" onchange="renderInv(currentInvFilter)" style="padding:5px 10px;border:1px solid #DDE1E7;border-radius:6px;font-size:12px"><option value="">All years</option></select>
+      </div>
+    </div>
     <div class="tabs">
       <div class="tab active" onclick="filterInv('all',this)">All</div>
       <div class="tab" onclick="filterInv('Unpaid',this)">Unpaid</div>
       <div class="tab" onclick="filterInv('Advance Received',this)">Advance</div>
-      <div class="tab" onclick="filterInv('Final Invoice Sent',this)">Invoice Sent</div>
-      <div class="tab" onclick="filterInv('Full Payment Received',this)">Fully Paid</div>
+      <div class="tab" onclick="filterInv('Fully Paid',this)">Fully Paid</div>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Invoice No</th><th>Date</th><th>Brand</th><th>Client</th><th>Description</th><th>Value (LKR)</th><th>Advance (LKR)</th><th>Balance (LKR)</th><th>Status</th><th>Days Out</th><th>Mark Paid</th><th>Delete</th></tr></thead>
+      <thead><tr><th>Invoice No</th><th>Date</th><th>Brand</th><th>Client</th><th>Description</th><th>Value (LKR)</th><th>Advance (LKR)</th><th>Balance (LKR)</th><th>Status</th><th>Days Out</th><th>Actions</th></tr></thead>
       <tbody id="inv-body"></tbody>
     </table></div>
   </div>
@@ -199,12 +202,11 @@ input[type="number"]::-webkit-inner-spin-button{opacity:.4}
 
 <!-- COSTS -->
 <div class="page" id="page-costs">
-  <div class="success" id="cost-success">Costs saved!</div>
-  <div class="section-note">Every invoice has a cost row created automatically when the invoice is saved. Just fill in the numbers and click Save.</div>
-  <div class="card">
-    <div class="card-title">Project costs &mdash; one row per invoice</div>
+  <div class="success" id="cost-success">&#10003; Costs saved to Google Sheets!</div>
+  <div class="info-note">Every invoice has a cost row. Fill the numbers and click Save — profit and margin calculate instantly.</div>
+  <div class="card"><div class="card-title">Project costs</div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Invoice No</th><th>Client</th><th>Invoice Value</th><th>Production</th><th>Equipment</th><th>Transport</th><th>Food &amp; Bev</th><th>FB Pages</th><th>Influencer</th><th>Boosting</th><th>Total Cost</th><th>Gross Profit</th><th>Margin %</th><th>Save</th></tr></thead>
+      <thead><tr><th>Invoice No</th><th>Client</th><th>Invoice Value</th><th>Production</th><th>Equipment</th><th>Transport</th><th>Food &amp; Bev</th><th>FB Pages</th><th>Influencer</th><th>Boosting</th><th>Other</th><th>Total Cost</th><th>Gross Profit</th><th>Margin %</th><th>Save</th></tr></thead>
       <tbody id="cost-body"></tbody>
     </table></div>
   </div>
@@ -212,355 +214,981 @@ input[type="number"]::-webkit-inner-spin-button{opacity:.4}
 
 <!-- VARIABLE COSTS -->
 <div class="page" id="page-variable">
-  <div class="success" id="var-success">Expense saved!</div>
-  <div class="card">
-    <div class="card-title">Log a variable expense</div>
+  <div class="success" id="var-success">&#10003; Expense saved to Google Sheets!</div>
+  <div class="card"><div class="card-title">Log a variable expense</div>
     <div class="form-grid-3">
-      <div class="field">
-        <label>Date</label>
-        <div class="date-row">
-          <div class="field"><input type="date" id="var-date"></div>
-          <button class="btn-today" onclick="setToday('var-date')">Today</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>Category</label>
-        <select id="var-cat">
-          <option>Fuel / Transport</option>
-          <option>Office Supplies &amp; Printing</option>
-          <option>Team Meals &amp; Entertainment</option>
-          <option>Ad Hoc Freelancer Payments</option>
-          <option>Software &amp; Subscriptions</option>
-          <option>Marketing &amp; Promotions</option>
-          <option>Other Expenses</option>
-        </select>
-      </div>
+      <div class="field"><label>Date</label><div class="date-row"><div class="field"><input type="date" id="var-date"></div><button class="btn-today" onclick="setToday('var-date')">Today</button></div></div>
+      <div class="field"><label>Category</label><select id="var-cat"><option>Fuel / Transport</option><option>Office Supplies &amp; Printing</option><option>Team Meals &amp; Entertainment</option><option>Ad Hoc Freelancer Payments</option><option>Software &amp; Subscriptions</option><option>Marketing &amp; Promotions</option><option>Other Expenses</option></select></div>
       <div class="field"><label>Amount (LKR)</label><input type="number" id="var-amount" placeholder="0"></div>
       <div class="field form-full"><label>Description</label><input id="var-desc" placeholder="What was this expense for?"></div>
     </div>
-    <button class="btn-primary" onclick="saveVar()">Save Expense</button>
+    <button class="btn btn-primary btn-full" onclick="saveVar()">Save Expense to Google Sheets</button>
   </div>
-  <div class="card">
-    <div class="card-title">Expense log</div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount (LKR)</th><th>Month</th><th>Delete</th></tr></thead>
-      <tbody id="var-body"></tbody>
-    </table></div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid #F0F2F5">
-      <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Monthly totals</div>
+  <div class="card"><div class="card-title">Expense log</div>
+    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount (LKR)</th><th>Month</th><th>Del</th></tr></thead><tbody id="var-body"></tbody></table></div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #F0F2F5">
+      <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Monthly totals</div>
       <div id="var-totals" style="display:flex;flex-wrap:wrap;gap:10px"></div>
     </div>
   </div>
 </div>
 
-<!-- FIXED -->
+<!-- FIXED COSTS -->
 <div class="page" id="page-fixed">
+  <div class="success" id="fixed-success">&#10003; Fixed costs saved to Google Sheets!</div>
+  <div class="card no-print"><div class="card-title">Add / edit fixed cost</div>
+    <div class="form-grid-4">
+      <div class="field"><label>Category</label><select id="fc-cat"><option>Salaries</option><option>Office/Rent</option><option>Loan</option><option>Freelancers</option><option>Contractors</option><option>Other</option></select></div>
+      <div class="field"><label>Description</label><input id="fc-desc" placeholder="e.g. Anuja Vitharama"></div>
+      <div class="field"><label>Monthly Amount (LKR)</label><input type="number" id="fc-amt" placeholder="0"></div>
+      <div class="field"><label>Type</label><select id="fc-type"><option>Fixed</option><option>Variable</option></select></div>
+    </div>
+    <input type="hidden" id="fc-edit-id">
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button class="btn btn-primary" onclick="saveFixed()" style="flex:1">Save Fixed Cost</button>
+      <button class="btn btn-sm" onclick="cancelFixedEdit()" id="fc-cancel-btn" style="display:none">Cancel Edit</button>
+    </div>
+  </div>
   <div class="card">
-    <div class="card-title">Monthly fixed costs</div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Category</th><th>Description</th><th>Monthly Amount (LKR)</th><th>Type</th></tr></thead>
-      <tbody id="fixed-body"></tbody>
-      <tfoot><tr>
-        <td colspan="2" style="font-weight:700;padding:11px 12px;background:#F5F7FA;color:#1F3864;font-size:13px">Total Monthly Fixed Costs</td>
-        <td style="font-weight:700;padding:11px 12px;background:#F5F7FA;color:#1F3864;font-size:14px;text-align:right" id="fixed-total"></td>
-        <td style="background:#F5F7FA"></td>
-      </tr></tfoot>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="card-title" style="margin:0">Monthly fixed costs</div>
+      <div style="font-size:14px;font-weight:700;color:#1F3864">Total: LKR <span id="fixed-total-display">0</span></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Category</th><th>Description</th><th>Monthly Amount (LKR)</th><th>Type</th><th>Edit</th><th>Delete</th></tr></thead><tbody id="fixed-body"></tbody></table></div>
+  </div>
+</div>
+
+<!-- CLIENTS -->
+<div class="page" id="page-clients">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div style="font-size:16px;font-weight:700;color:#1F3864">Client Overview</div>
+    <button class="btn btn-primary" onclick="openModal('modal-add-client')">+ Add New Client</button>
+  </div>
+  <div class="client-grid" id="client-grid"></div>
+</div>
+
+<!-- MONTHLY & YEARLY -->
+<div class="page" id="page-monthly">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="font-size:16px;font-weight:700;color:#1F3864">Invoiced vs Received &mdash; Monthly &amp; Yearly</div>
+    <div class="year-tabs" id="year-tabs"></div>
+  </div>
+  <div class="kpi-grid" id="yearly-kpis" style="grid-template-columns:repeat(5,1fr)"></div>
+  <div class="card"><div class="card-title">Month-by-month breakdown</div>
+    <div class="table-wrap"><table class="month-table">
+      <thead><tr><th>Month</th><th>Invoiced (LKR)</th><th>Collected (LKR)</th><th>Outstanding (LKR)</th><th>Direct Costs</th><th>Variable Costs</th><th>Fixed Costs</th><th>Gross Profit</th><th>True Net P&amp;L</th><th>Margin %</th><th>Collection %</th></tr></thead>
+      <tbody id="monthly-body"></tbody>
     </table></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="card-title">Invoiced vs collected chart</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="chart-monthly"></canvas></div>
+  </div>
+</div>
+
+<!-- CASH FLOW -->
+<div class="page" id="page-cashflow">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <div style="font-size:16px;font-weight:700;color:#1F3864">Cash Flow Projection &mdash; Monthly 25th Targets</div>
+    <button class="btn btn-primary" onclick="renderCashflow()">&#8635; Recalculate</button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="card no-print">
+    <div class="card-title">Settings</div>
+    <div class="form-grid-3">
+      <div class="field">
+        <label>Current Cash Balance (LKR)</label>
+        <input type="number" id="cf-opening" placeholder="e.g. 500000" oninput="renderCashflow()">
+      </div>
+      <div class="field">
+        <label>Default Payment Estimate</label>
+        <select id="cf-default-days" onchange="renderCashflow()">
+          <option value="14">14 days from invoice date</option>
+          <option value="30">30 days from invoice date</option>
+          <option value="45" selected>45 days from invoice date</option>
+          <option value="60">60 days from invoice date</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Months ahead</label>
+        <select id="cf-months" onchange="renderCashflow()">
+          <option value="2">This month + next month</option>
+          <option value="3" selected>3 months ahead</option>
+          <option value="4">4 months ahead</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHS -->
+  <div id="cf-months-container"></div>
+</div>
+
+<!-- REPORTS -->
+<div class="page" id="page-reports">
+  <div class="card no-print"><div class="card-title">Generate report</div>
+    <div class="form-grid-3">
+      <div class="field"><label>Report Type</label><select id="rpt-type"><option value="pl">Profit &amp; Loss Statement</option><option value="invoice">Invoice Summary</option><option value="outstanding">Outstanding Balances</option><option value="client">Client Revenue Report</option></select></div>
+      <div class="field"><label>Period</label><select id="rpt-period"><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="this-year">This Year</option><option value="all">All Time</option></select></div>
+      <div class="field"><label>Actions</label><div style="display:flex;gap:8px;margin-top:5px"><button class="btn btn-primary" onclick="generateReport()" style="flex:1;padding:9px">Generate</button><button class="btn btn-sm btn-blue" onclick="window.print()" style="padding:9px 14px">Print / PDF</button></div></div>
+    </div>
+  </div>
+  <div id="report-output"></div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modal-add-client">
+  <div class="modal">
+    <div class="modal-title"><span class="modal-close" onclick="closeModal('modal-add-client')">&#x2715;</span>Add New Client</div>
+    <div class="field" style="margin-bottom:14px"><label>Client / Agency Name</label><input id="new-client-name" placeholder="e.g. Ogilvy Lanka"></div>
+    <div class="field" style="margin-bottom:14px"><label>Contact Person (optional)</label><input id="new-client-contact" placeholder="Name"></div>
+    <div class="field" style="margin-bottom:18px"><label>Notes (optional)</label><input id="new-client-notes" placeholder="Any notes..."></div>
+    <button class="btn btn-primary btn-full" onclick="saveNewClient()">Add Client</button>
+  </div>
+</div>
+<div class="modal-bg" id="modal-edit-inv">
+  <div class="modal">
+    <div class="modal-title"><span class="modal-close" onclick="closeModal('modal-edit-inv')">&#x2715;</span>Edit Invoice <span id="edit-inv-no-title"></span></div>
+    <input type="hidden" id="edit-inv-original-no">
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="field"><label>Date Issued</label><div class="date-row"><div class="field"><input type="date" id="edit-inv-date"></div><button class="btn-today" onclick="setToday('edit-inv-date')">Today</button></div></div>
+      <div class="field"><label>Client / Agency</label><select id="edit-inv-client"></select></div>
+      <div class="field"><label>Brand</label><input id="edit-inv-brand"></div>
+      <div class="field"><label>Invoice Value (LKR)</label><input type="number" id="edit-inv-value"></div>
+      <div class="field form-full"><label>Service Description</label><input id="edit-inv-desc"></div>
+      <div class="field"><label>Advance Received (LKR)</label><input type="number" id="edit-inv-advance"></div>
+      <div class="field"><label>Payment Status</label><select id="edit-inv-status"><option>Unpaid</option><option>Advance Received</option><option>Fully Paid</option></select></div>
+      <div class="field"><label>Date Payment Received</label><div class="date-row"><div class="field"><input type="date" id="edit-inv-paid"></div><button class="btn-today" onclick="setToday('edit-inv-paid')">Today</button></div></div>
+      <div class="field"><label>Due Date</label><div class="date-row"><div class="field"><input type="date" id="edit-inv-due"></div><button class="btn-today" onclick="setToday('edit-inv-due')">Today</button></div></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="updateInvoice()">Save Changes</button>
+  </div>
+</div>
+<div class="modal-bg" id="modal-client-detail">
+  <div class="modal" style="width:min(800px,95vw)">
+    <div class="modal-title"><span class="modal-close" onclick="closeModal('modal-client-detail')">&#x2715;</span><span id="client-detail-title"></span></div>
+    <div id="client-detail-kpis" class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"></div>
+    <div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Date</th><th>Brand</th><th>Description</th><th>Value (LKR)</th><th>Balance (LKR)</th><th>Status</th><th>Days Out</th></tr></thead><tbody id="client-detail-body"></tbody></table></div>
   </div>
 </div>
 
 <script>
-const FIXED=[
-  {cat:"Salaries",desc:"Anuja Vitharama",amt:125000,type:"Fixed"},
-  {cat:"Salaries",desc:"Sasindu",amt:80000,type:"Fixed"},
-  {cat:"Salaries",desc:"Nayana Jayawardena",amt:55000,type:"Fixed"},
-  {cat:"Salaries",desc:"Supun",amt:45000,type:"Fixed"},
-  {cat:"Office/Rent",desc:"One Galle Face - Key Money",amt:140000,type:"Fixed"},
-  {cat:"Office/Rent",desc:"One Galle Face - Rent",amt:170000,type:"Fixed"},
-  {cat:"Loan",desc:"NDB Loan Repayment",amt:155000,type:"Fixed"},
-  {cat:"Freelancers",desc:"Mihindu Fonseka",amt:200000,type:"Fixed"},
-  {cat:"Freelancers",desc:"Janith Mendis",amt:100000,type:"Fixed"},
-  {cat:"Freelancers",desc:"Vibeethaka",amt:126400,type:"Variable"},
-  {cat:"Freelancers",desc:"Manorama",amt:15000,type:"Fixed"},
-  {cat:"Freelancers",desc:"Hamza",amt:40000,type:"Fixed"},
-  {cat:"Contractors",desc:"Shane",amt:400000,type:"Fixed"},
-  {cat:"Contractors",desc:"Vibeethaka (retainer)",amt:400000,type:"Fixed"},
-];
-const FIXED_TOTAL=FIXED.reduce((a,b)=>a+b.amt,0);
-const SB={"Unpaid":"bg-red","Advance Received":"bg-amber","Final Invoice Sent":"bg-blue","Full Payment Received":"bg-green"};
-const CB={"Fuel / Transport":"bg-green","Office Supplies & Printing":"bg-amber","Team Meals & Entertainment":"bg-amber","Ad Hoc Freelancer Payments":"bg-blue","Software & Subscriptions":"bg-purple","Marketing & Promotions":"bg-green","Other Expenses":"bg-gray"};
+// ── CONFIG ────────────────────────────────────────────────────────────────
+const API = "https://script.google.com/macros/s/AKfycbz4UX3cJgO5s8a1jpiBfyxD4g24C0bdA7yA7mjPGQzjvmJCvRQ_OlijwNbupRX0CeCdNw/exec";
 
-let INV=[],COSTS={},VARS=[];
+// ── API CALLS ─────────────────────────────────────────────────────────────
+async function apiCall(params, body=null) {
+  // Use GET only with all data in URL params — avoids CORS preflight entirely
+  const allParams = {...params};
+  if(body) allParams.payload = JSON.stringify(body);
+  const url = API + "?" + new URLSearchParams(allParams).toString();
+  try {
+    const r = await fetch(url, {method:"GET", mode:"cors"});
+    const text = await r.text();
+    try { return JSON.parse(text); }
+    catch { return {error: text}; }
+  } catch(e) {
+    console.error("API error:", e);
+    return {error: e.message};
+  }
+}
+const gsRead  = (sheet) => apiCall({action:"read", sheet});
+const gsWrite = (sheet, row) => apiCall({action:"write", sheet}, {row});
+const gsUpdate= (sheet, key, val, row) => apiCall({action:"update", sheet, key, val}, {row});
+const gsDel   = (sheet, key, val) => apiCall({action:"delete", sheet, key, val});
+const gsSetup = () => apiCall({action:"setup"});
 
-const LS={
-  get(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}},
-  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+// ── DATA ──────────────────────────────────────────────────────────────────
+let INV=[], COSTS={}, VARS=[], CLIENTS=[], FIXED=[];
+let cRev=null, cMarg=null, cIC=null, cCl=null, cMo=null;
+let currentInvFilter="all", selectedYear="";
+
+const SBS = {"Unpaid":"bg-red","Advance Received":"bg-amber","Fully Paid":"bg-green"};
+const CBC = {"Fuel / Transport":"bg-teal","Office Supplies & Printing":"bg-amber","Team Meals & Entertainment":"bg-amber","Ad Hoc Freelancer Payments":"bg-blue","Software & Subscriptions":"bg-purple","Marketing & Promotions":"bg-green","Other Expenses":"bg-gray"};
+const CATC= {"Salaries":"bg-blue","Office/Rent":"bg-amber","Loan":"bg-red","Freelancers":"bg-teal","Contractors":"bg-green","Other":"bg-gray"};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+const fmt  = n => Math.round(n||0).toLocaleString("en-LK");
+
+// Normalise any date format to YYYY-MM-DD
+function normaliseDate(d) {
+  if(!d || d==="") return "";
+  // Google Sheets serial number (days since 30 Dec 1899)
+  if(typeof d === 'number' || (typeof d === 'string' && /^\d{5}$/.test(d.trim()))) {
+    const serial = +d;
+    if(serial > 1000) {
+      // Use UTC to avoid timezone shifting the date
+      const ms = (serial - 25569) * 86400 * 1000;
+      const dt = new Date(ms);
+      const y = dt.getUTCFullYear();
+      const m = String(dt.getUTCMonth()+1).padStart(2,"0");
+      const day = String(dt.getUTCDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+  }
+  const s = String(d).trim();
+  if(!s) return "";
+  // Already YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  // MM/DD/YYYY (Google Sheets US locale default)
+  if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+    const [m,day,y] = s.split("/");
+    return `${y}-${m.padStart(2,"0")}-${day.padStart(2,"0")}`;
+  }
+  // DD/MM/YYYY
+  if(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(s)) {
+    const parts = s.split("/");
+    if(parts[2].length===2) parts[2]="20"+parts[2];
+    return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
+  }
+  // DD-MM-YYYY or YYYY/MM/DD
+  if(/^\d{1,2}-\d{1,2}-\d{4}$/.test(s)) {
+    const [day,m,y] = s.split("-");
+    return `${y}-${m.padStart(2,"0")}-${day.padStart(2,"0")}`;
+  }
+  // Try native parse as last resort — use UTC noon to avoid timezone boundary issues
+  try {
+    const dt = new Date(s);
+    if(!isNaN(dt)) {
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth()+1).padStart(2,"0");
+      const day = String(dt.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+  } catch{}
+  return s;
+}
+
+const fmtD = d => {
+  const clean = normaliseDate(d);
+  if(!clean) return "-";
+  try {
+    const dt = new Date(clean+"T00:00:00");
+    if(isNaN(dt)) return String(d);
+    return dt.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+  } catch{ return String(d); }
 };
+const moOf = d => {
+  const clean = normaliseDate(d);
+  if(!clean) return "";
+  try {
+    const dt = new Date(clean+"T00:00:00");
+    if(isNaN(dt)) return "";
+    return dt.toLocaleString("en-GB",{month:"short",year:"numeric"});
+  } catch{ return ""; }
+};
+const yearOf = d => {
+  const clean = normaliseDate(d);
+  if(!clean) return "";
+  try {
+    const dt = new Date(clean+"T00:00:00");
+    if(isNaN(dt)) return "";
+    return String(dt.getFullYear());
+  } catch{ return ""; }
+};
+const today= () => new Date().toISOString().slice(0,10);
+const cleanDate = d => normaliseDate(d);
+const curMo= () => moOf(today());
+const daysAgo = d => {
+  const clean = normaliseDate(d);
+  if(!clean) return 0;
+  try {
+    const dt = new Date(clean+"T00:00:00");
+    if(isNaN(dt)) return 0;
+    return Math.floor((Date.now()-dt)/864e5);
+  } catch{ return 0; }
+};
+const setToday=id=>{ const e=document.getElementById(id); if(e)e.value=today(); };
+const FT   = () => FIXED.reduce((a,b)=>a+(+b.amt||0),0);
+const flash= id=>{ const e=document.getElementById(id); if(!e)return; e.style.display="block"; setTimeout(()=>e.style.display="none",3500); };
+const openModal =id=>document.getElementById(id).classList.add("open");
+const closeModal=id=>document.getElementById(id).classList.remove("open");
+const uid  = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
-function fmt(n){return Math.round(n||0).toLocaleString("en-LK")}
-function fmtD(d){if(!d)return"-";const dt=new Date(d+"T00:00:00");return dt.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}
-function moOf(d){if(!d)return"";const dt=new Date(d+"T00:00:00");return dt.toLocaleString("en-GB",{month:"short",year:"numeric"})}
-function today(){return new Date().toISOString().slice(0,10)}
-function curMo(){return moOf(today())}
-function daysAgo(d){if(!d)return 0;return Math.floor((Date.now()-new Date(d+"T00:00:00"))/(864e5))}
-function setToday(id){document.getElementById(id).value=today()}
-
-function nextNo(){
-  const yr=new Date().getFullYear().toString().slice(-2);
-  if(!INV.length)return yr+"-001";
-  const nums=INV.map(i=>{const m=i.no.match(/^(\d{2})-(\d{3})$/);return m?+m[2]:0});
-  return yr+"-"+String(Math.max(...nums)+1).padStart(3,"0");
+function setSyncing(state) {
+  const dot = document.getElementById("sync-dot");
+  const lbl = document.getElementById("sync-label");
+  if(state==="syncing"){dot.className="sync-dot syncing";lbl.textContent="Saving...";}
+  else if(state==="error"){dot.className="sync-dot error";lbl.textContent="Error";}
+  else{dot.className="sync-dot";lbl.textContent="Synced";}
 }
-function refreshBadge(){const n=nextNo();document.getElementById("next-badge").textContent="Next: "+n;const el=document.getElementById("next-inv-num");if(el)el.textContent=n}
 
-function load(){
-  INV=LS.get("nx_inv")||defaultInv();
-  COSTS=LS.get("nx_costs")||defaultCosts();
-  VARS=LS.get("nx_vars")||defaultVars();
+function nextNo() {
+  const yr = new Date().getFullYear().toString().slice(-2);
+  if(!INV.length) return yr+"-001";
+  const nums = INV.map(i=>{ const m=(i.no||"").match(/^(\d{2})-(\d{3})$/); return m?+m[2]:0; });
+  return yr+"-"+String(Math.max(...nums,0)+1).padStart(3,"0");
 }
-function persist(){LS.set("nx_inv",INV);LS.set("nx_costs",COSTS);LS.set("nx_vars",VARS)}
+function refreshBadge() {
+  const n=nextNo();
+  const b=document.getElementById("next-badge"); if(b)b.textContent="Next: "+n;
+  const d=document.getElementById("next-inv-num"); if(d)d.textContent=n;
+}
 
-function flash(id){const el=document.getElementById(id);el.style.display="block";setTimeout(()=>el.style.display="none",3500)}
+// ── LOAD ALL ──────────────────────────────────────────────────────────────
+async function loadAll() {
+  setSyncing("syncing");
+  try {
+    const [invR,costR,varR,clR,fcR] = await Promise.all([
+      gsRead("Invoices"), gsRead("Costs"),
+      gsRead("VariableCosts"), gsRead("Clients"), gsRead("FixedCosts")
+    ]);
+    INV    = (invR.rows||[]).map(r=>({no:r.no,date:cleanDate(r.date),brand:r.brand||"",client:r.client||"",desc:r.desc||"",value:String(r.value||0),advance:String(r.advance||0),status:r.status||"Unpaid",paidDate:cleanDate(r.paidDate),dueDate:cleanDate(r.dueDate)}));
+    COSTS  = {};(costR.rows||[]).forEach(r=>{COSTS[r.invNo]={invNo:r.invNo,invVal:+r.invVal||0,prod:+r.prod||0,equip:+r.equip||0,transport:+r.transport||0,food:+r.food||0,fb:+r.fb||0,inf:+r.inf||0,boost:+r.boost||0,other:+r.other||0,total:+r.total||0}});
+    VARS   = (varR.rows||[]).map(r=>({id:r.id,date:r.date||"",cat:r.cat||"",desc:r.desc||"",amount:+r.amount||0}));
+    CLIENTS= (clR.rows||[]).map(r=>({id:r.id,name:r.name||"",contact:r.contact||"",notes:r.notes||""}));
+    FIXED  = (fcR.rows||[]).map(r=>({id:r.id,cat:r.cat||"",desc:r.desc||"",amt:+r.amt||0,type:r.type||"Fixed"}));
+    setSyncing("ok");
+  } catch(e) {
+    setSyncing("error");
+    console.error("Load error:",e);
+  }
+}
 
-function showPage(p,btn){
+async function syncAll() {
+  await loadAll();
+  const active = document.querySelector(".page.active")?.id?.replace("page-","");
+  if(active) ({dashboard:renderDash,invoices:()=>{populateClientDropdowns();renderInv(currentInvFilter)},costs:renderCosts,variable:renderVars,fixed:renderFixed,clients:renderClients,monthly:renderMonthly,reports:()=>{}})[active]?.();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+async function init() {
+  document.getElementById("today-display").textContent = new Date().toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"long",year:"numeric"});
+  // Setup headers first time if sheets are empty
+  await gsSetup();
+  await loadAll();
+  populateClientDropdowns();
+  refreshBadge();
+  renderDash();
+  renderFixed();
+  // Auto-refresh every 60 seconds
+  setInterval(async()=>{ await loadAll(); refreshBadge(); renderDash(); }, 10000);
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────
+function showPage(p, btn) {
   document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("active"));
   document.getElementById("page-"+p).classList.add("active");
   if(btn)btn.classList.add("active");
   refreshBadge();
-  ({dashboard:renderDash,invoices:()=>renderInv("all"),costs:renderCosts,variable:renderVars,fixed:renderFixed})[p]?.();
+  ({dashboard:renderDash,invoices:()=>{populateClientDropdowns();renderInv("all")},costs:renderCosts,variable:renderVars,fixed:renderFixed,clients:renderClients,monthly:renderMonthly,cashflow:renderCashflow,reports:()=>{}})[p]?.();
 }
 
-function saveInvoice(){
+// ── CLIENT DROPDOWNS ──────────────────────────────────────────────────────
+function populateClientDropdowns() {
+  const opts = CLIENTS.map(c=>`<option value="${c.name}">${c.name}</option>`).join("");
+  ["inv-client","edit-inv-client","filter-client-inv"].forEach(id=>{
+    const el=document.getElementById(id); if(!el)return;
+    el.innerHTML=(id.startsWith("filter")?"<option value=''>All clients</option>":"<option value=''>Select client...</option>")+opts;
+  });
+  const yrs=[...new Set(INV.map(i=>yearOf(i.date)).filter(Boolean))].sort();
+  const yEl=document.getElementById("filter-year-inv");
+  if(yEl)yEl.innerHTML="<option value=''>All years</option>"+yrs.map(y=>`<option value="${y}">${y}</option>`).join("");
+}
+
+// ── CLIENTS ───────────────────────────────────────────────────────────────
+async function saveNewClient() {
+  const name=document.getElementById("new-client-name").value.trim();
+  if(!name){alert("Please enter a client name.");return;}
+  if(CLIENTS.find(c=>c.name===name)){alert("Client already exists.");return;}
+  setSyncing("syncing");
+  try {
+    const id=uid();
+    await gsWrite("Clients",{id,name,contact:document.getElementById("new-client-contact").value.trim(),notes:document.getElementById("new-client-notes").value.trim()});
+    CLIENTS.push({id,name,contact:"",notes:""});
+    CLIENTS.sort((a,b)=>a.name.localeCompare(b.name));
+    populateClientDropdowns(); closeModal("modal-add-client");
+    ["new-client-name","new-client-contact","new-client-notes"].forEach(id=>document.getElementById(id).value="");
+    setSyncing("ok");
+    if(document.getElementById("page-clients").classList.contains("active"))renderClients();
+  } catch(e){setSyncing("error");alert("Error: "+e.message);}
+}
+async function deleteClient(id,name) {
+  if(!confirm("Remove client "+name+"?"))return;
+  setSyncing("syncing");
+  try{ await gsDel("Clients","id",id); CLIENTS=CLIENTS.filter(c=>c.id!==id); renderClients(); populateClientDropdowns(); setSyncing("ok"); }
+  catch(e){setSyncing("error");alert("Error: "+e.message);}
+}
+function renderClients() {
+  const grid=document.getElementById("client-grid"); if(!grid)return;
+  grid.innerHTML=CLIENTS.map(cl=>{
+    const cI=INV.filter(i=>i.client===cl.name);
+    const total=cI.reduce((a,b)=>a+(+b.value||0),0);
+    const coll=cI.filter(i=>i.status==="Fully Paid").reduce((a,b)=>a+(+b.value||0),0);
+    const out=cI.filter(i=>i.status!=="Fully Paid").reduce((a,b)=>a+Math.max(0,(+b.value||0)-(+b.advance||0)),0);
+    const rate=total>0?Math.round(coll/total*100):0;
+    return`<div class="client-card" onclick="openClientDetail('${cl.name}')">
+      <div class="client-name">${cl.name}</div>
+      ${cl.contact?`<div style="font-size:12px;color:#888;margin-bottom:4px">${cl.contact}</div>`:""}
+      <div class="client-stats">
+        <div class="client-stat"><div class="client-stat-val" style="color:#1F3864">LKR ${fmt(total)}</div><div class="client-stat-lbl">Total Invoiced</div></div>
+        <div class="client-stat"><div class="client-stat-val" style="color:#C00000">LKR ${fmt(out)}</div><div class="client-stat-lbl">Outstanding</div></div>
+        <div class="client-stat"><div class="client-stat-val" style="color:#375623">${rate}%</div><div class="client-stat-lbl">Collection Rate</div></div>
+        <div class="client-stat"><div class="client-stat-val">${cI.length}</div><div class="client-stat-lbl">Invoices</div></div>
+      </div>
+      <div style="margin-top:10px"><button class="btn-sm btn-red" onclick="event.stopPropagation();deleteClient('${cl.id}','${cl.name}')" style="font-size:10px">Remove</button></div>
+    </div>`;
+  }).join("")||`<div class="empty">No clients yet. Add your first client.</div>`;
+}
+function openClientDetail(name){
+  const cI=[...INV].filter(i=>i.client===name).sort((a,b)=>b.no.localeCompare(a.no));
+  const total=cI.reduce((a,b)=>a+(+b.value||0),0);
+  const coll=cI.filter(i=>i.status==="Fully Paid").reduce((a,b)=>a+(+b.value||0),0);
+  const out=cI.filter(i=>i.status!=="Fully Paid").reduce((a,b)=>a+Math.max(0,(+b.value||0)-(+b.advance||0)),0);
+  document.getElementById("client-detail-title").textContent=name+" \u2014 Invoice History";
+  document.getElementById("client-detail-kpis").innerHTML=[{l:"Total Invoiced",v:"LKR "+fmt(total),c:"#1F3864"},{l:"Total Collected",v:"LKR "+fmt(coll),c:"#375623"},{l:"Outstanding",v:"LKR "+fmt(out),c:"#C00000"}].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div></div>`).join("");
+  document.getElementById("client-detail-body").innerHTML=cI.map(i=>{const bal=Math.max(0,(+i.value||0)-(+i.advance||0));return`<tr><td style="font-weight:700;color:#1F3864">${i.no}</td><td>${fmtD(i.date)}</td><td>${i.brand||"-"}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.desc}</td><td style="text-align:right;font-weight:600">${fmt(+i.value)}</td><td style="text-align:right;font-weight:700;color:${bal>0?"#C00000":"#375623"}">${fmt(bal)}</td><td><span class="badge ${SBS[i.status]||"bg-gray"}">${i.status}</span></td><td style="text-align:center">${i.status==="Fully Paid"?"-":daysAgo(i.date)+" d"}</td></tr>`}).join("")||`<tr><td colspan="8" class="empty">No invoices</td></tr>`;
+  openModal("modal-client-detail");
+}
+
+// ── INVOICES ──────────────────────────────────────────────────────────────
+async function saveInvoice() {
   const date=document.getElementById("inv-date").value;
   const client=document.getElementById("inv-client").value;
-  if(!date){alert("Please select a date. Click the date field, then click Today or pick from the calendar.");return}
-  if(!client){alert("Please select a client / agency.");return}
+  if(!date){alert("Please select a date.");return;}
+  if(!client){alert("Please select a client.");return;}
+  const btn=document.getElementById("inv-save-btn");
+  btn.disabled=true; btn.textContent="Saving...";
+  setSyncing("syncing");
   const no=nextNo();
-  const inv={no,date,brand:document.getElementById("inv-brand").value.trim(),client,desc:document.getElementById("inv-desc").value.trim(),value:document.getElementById("inv-value").value||"0",advance:document.getElementById("inv-advance").value||"0",status:document.getElementById("inv-status").value,paidDate:document.getElementById("inv-paid").value||null,dueDate:document.getElementById("inv-due").value||null};
-  INV.push(inv);
-  COSTS[no]={invNo:no,invVal:+inv.value,prod:0,equip:0,transport:0,food:0,fb:0,inf:0,boost:0,total:0};
-  persist();
-  ["inv-brand","inv-desc","inv-value","inv-advance","inv-date","inv-paid","inv-due"].forEach(id=>document.getElementById(id).value="");
-  document.getElementById("inv-status").value="Unpaid";
-  document.getElementById("inv-client").value="";
-  refreshBadge();flash("inv-success");renderInv("all");renderDash();
+  const inv={no,date,brand:document.getElementById("inv-brand").value.trim(),client,desc:document.getElementById("inv-desc").value.trim(),value:+(document.getElementById("inv-value").value||0),advance:+(document.getElementById("inv-advance").value||0),status:document.getElementById("inv-status").value,paidDate:document.getElementById("inv-paid").value||"",dueDate:document.getElementById("inv-due").value||""};
+  try {
+    await gsWrite("Invoices",inv);
+    await gsWrite("Costs",{invNo:no,invVal:inv.value,prod:0,equip:0,transport:0,food:0,fb:0,inf:0,boost:0,other:0,total:0});
+    INV.push({...inv,value:String(inv.value),advance:String(inv.advance)});
+    COSTS[no]={invNo:no,invVal:inv.value,prod:0,equip:0,transport:0,food:0,fb:0,inf:0,boost:0,other:0,total:0};
+    ["inv-brand","inv-desc","inv-value","inv-advance","inv-date","inv-paid","inv-due"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("inv-status").value="Unpaid";
+    document.getElementById("inv-client").value="";
+    refreshBadge(); flash("inv-success"); renderInv("all"); renderDash(); setSyncing("ok");
+  } catch(e){setSyncing("error");alert("Error saving invoice: "+e.message);}
+  finally{btn.disabled=false;btn.textContent="Save Invoice to Google Sheets";}
 }
-
-function markPaid(no){
-  const i=INV.find(x=>x.no===no);if(!i)return;
-  i.status="Full Payment Received";i.paidDate=today();
-  persist();renderInv("all");renderDash();
+function openEditInv(no) {
+  const i=INV.find(x=>x.no===no); if(!i)return;
+  document.getElementById("edit-inv-no-title").textContent=no;
+  document.getElementById("edit-inv-original-no").value=no;
+  document.getElementById("edit-inv-date").value=i.date||"";
+  document.getElementById("edit-inv-brand").value=i.brand||"";
+  document.getElementById("edit-inv-value").value=i.value||"";
+  document.getElementById("edit-inv-advance").value=i.advance||"";
+  document.getElementById("edit-inv-desc").value=i.desc||"";
+  document.getElementById("edit-inv-status").value=i.status||"Unpaid";
+  document.getElementById("edit-inv-paid").value=i.paidDate||"";
+  document.getElementById("edit-inv-due").value=i.dueDate||"";
+  document.getElementById("edit-inv-client").innerHTML=CLIENTS.map(c=>`<option value="${c.name}"${c.name===i.client?" selected":""}>${c.name}</option>`).join("");
+  openModal("modal-edit-inv");
 }
-
-function delInv(no){
-  if(!confirm("Delete invoice "+no+"? This also removes the cost row."))return;
-  INV=INV.filter(i=>i.no!==no);delete COSTS[no];
-  persist();refreshBadge();renderInv("all");renderCosts();renderDash();
+async function updateInvoice() {
+  const no=document.getElementById("edit-inv-original-no").value;
+  const idx=INV.findIndex(i=>i.no===no); if(idx<0)return;
+  const upd={no,date:document.getElementById("edit-inv-date").value,brand:document.getElementById("edit-inv-brand").value.trim(),client:document.getElementById("edit-inv-client").value,desc:document.getElementById("edit-inv-desc").value.trim(),value:+(document.getElementById("edit-inv-value").value||0),advance:+(document.getElementById("edit-inv-advance").value||0),status:document.getElementById("edit-inv-status").value,paidDate:document.getElementById("edit-inv-paid").value||"",dueDate:document.getElementById("edit-inv-due").value||""};
+  setSyncing("syncing");
+  try {
+    await gsUpdate("Invoices","no",no,upd);
+    INV[idx]={...upd,value:String(upd.value),advance:String(upd.advance)};
+    if(COSTS[no])COSTS[no].invVal=upd.value;
+    closeModal("modal-edit-inv"); flash("inv-success"); renderInv(currentInvFilter); renderDash(); setSyncing("ok");
+  } catch(e){setSyncing("error");alert("Error: "+e.message);}
 }
-
-function renderInv(filter){
-  refreshBadge();
+async function markPaid(no) {
+  setSyncing("syncing");
+  try {
+    const upd={status:"Fully Paid",paidDate:today()};
+    await gsUpdate("Invoices","no",no,upd);
+    const i=INV.find(x=>x.no===no); if(i){i.status="Fully Paid";i.paidDate=today();}
+    renderInv(currentInvFilter); setSyncing("ok");
+  } catch(e){setSyncing("error");alert("Error: "+e.message);}
+}
+async function delInv(no) {
+  if(!confirm("Delete invoice "+no+"? Also removes its cost row."))return;
+  setSyncing("syncing");
+  try {
+    await gsDel("Invoices","no",no);
+    await gsDel("Costs","invNo",no);
+    INV=INV.filter(i=>i.no!==no); delete COSTS[no];
+    refreshBadge(); renderInv(currentInvFilter); renderCosts(); setSyncing("ok");
+  } catch(e){setSyncing("error");alert("Error: "+e.message);}
+}
+function renderInv(filter) {
+  currentInvFilter=filter; refreshBadge();
+  const cF=document.getElementById("filter-client-inv")?.value||"";
+  const yF=document.getElementById("filter-year-inv")?.value||"";
   let list=filter==="all"?[...INV]:INV.filter(i=>i.status===filter);
+  if(cF)list=list.filter(i=>i.client===cF);
+  if(yF)list=list.filter(i=>yearOf(i.date)===yF);
   list.sort((a,b)=>b.no.localeCompare(a.no));
   document.getElementById("inv-body").innerHTML=list.length?list.map(i=>{
     const bal=Math.max(0,(+i.value||0)-(+i.advance||0));
-    const paid=i.status==="Full Payment Received";
-    const d=paid?0:daysAgo(i.date);
-    const dc=d>60?"#C00000":d>30?"#C07A00":"#1a1a1a";
+    const paid=i.status==="Fully Paid"; const d=paid?0:daysAgo(i.date);
     return`<tr>
       <td style="font-weight:700;color:#1F3864">${i.no}</td>
       <td style="white-space:nowrap">${fmtD(i.date)}</td>
-      <td>${i.brand||"-"}</td><td>${i.client}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.desc}">${i.desc||"-"}</td>
+      <td>${i.brand||"-"}</td><td>${i.client||"-"}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.desc}">${i.desc||"-"}</td>
       <td style="text-align:right;font-weight:600">${fmt(+i.value)}</td>
       <td style="text-align:right">${fmt(+i.advance)}</td>
       <td style="text-align:right;font-weight:700;color:${bal>0?"#C00000":"#375623"}">${fmt(bal)}</td>
-      <td><span class="badge ${SB[i.status]||"bg-gray"}">${i.status}</span></td>
-      <td style="text-align:center;font-weight:600;color:${dc}">${paid?"-":d+" d"}</td>
-      <td>${paid?"-":`<button class="btn-sm btn-paid" onclick="markPaid(\'${i.no}\')">Mark Paid</button>`}</td>
-      <td><button class="btn-sm btn-del" onclick="delInv(\'${i.no}\')">Del</button></td>
-    </tr>`}).join(""):`<tr><td colspan="12" class="empty">No invoices found</td></tr>`;
+      <td><span class="badge ${SBS[i.status]||"bg-gray"}">${i.status}</span></td>
+      <td style="text-align:center;font-weight:600;color:${d>60?"#C00000":d>30?"#C07A00":"#1a1a1a"}">${paid?"-":d+" d"}</td>
+      <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn-sm btn-blue" onclick="openEditInv('${i.no}')">Edit</button>
+        ${paid?"":` <button class="btn-sm btn-green" onclick="markPaid('${i.no}')">Mark Paid</button>`}
+        <button class="btn-sm btn-red" onclick="delInv('${i.no}')">Del</button>
+      </td>
+    </tr>`;
+  }).join(""):`<tr><td colspan="11" class="empty">No invoices found</td></tr>`;
 }
-function filterInv(f,el){document.querySelectorAll("#page-invoices .tab").forEach(t=>t.classList.remove("active"));el.classList.add("active");renderInv(f)}
+function filterInv(f,el){document.querySelectorAll("#page-invoices .tab").forEach(t=>t.classList.remove("active"));el.classList.add("active");renderInv(f);}
 
+// ── COSTS ─────────────────────────────────────────────────────────────────
 function calcRow(no){
-  const fs=["prod","equip","transport","food","fb","inf","boost"];
+  const fs=["prod","equip","transport","food","fb","inf","boost","other"];
   const total=fs.reduce((a,f)=>{const el=document.getElementById("c_"+no+"_"+f);return a+(el?+el.value||0:0)},0);
-  const inv=INV.find(i=>i.no===no);const val=inv?+inv.value||0:0;
-  const profit=val-total;const margin=val>0?Math.round(profit/val*100):0;
-  const ct=document.getElementById("ct_"+no);const cp=document.getElementById("cp_"+no);const cm=document.getElementById("cm_"+no);
+  const inv=INV.find(i=>i.no===no); const val=inv?+inv.value||0:0;
+  const p=val-total; const m=val>0?Math.round(p/val*100):0;
+  const ct=document.getElementById("ct_"+no); const cp=document.getElementById("cp_"+no); const cm=document.getElementById("cm_"+no);
   if(ct)ct.textContent=fmt(total);
-  if(cp){cp.textContent=fmt(profit);cp.className=profit>=0?"profit-pos":"profit-neg"}
-  if(cm)cm.textContent=margin+"%";
+  if(cp){cp.textContent=fmt(p);cp.className=p>=0?"profit-pos":"profit-neg";}
+  if(cm)cm.textContent=m+"%";
 }
-function saveCost(no){
-  const fs=["prod","equip","transport","food","fb","inf","boost"];
+async function saveCost(no){
+  const fs=["prod","equip","transport","food","fb","inf","boost","other"];
   const inv=INV.find(i=>i.no===no);
   const row={invNo:no,invVal:inv?+inv.value||0:0};
-  fs.forEach(f=>{const el=document.getElementById("c_"+no+"_"+f);row[f]=el?+el.value||0:0});
+  fs.forEach(f=>{const el=document.getElementById("c_"+no+"_"+f);row[f]=el?+el.value||0:0;});
   row.total=fs.reduce((a,f)=>a+row[f],0);
-  COSTS[no]=row;persist();calcRow(no);flash("cost-success");renderDash();
+  setSyncing("syncing");
+  try {
+    const existing=COSTS[no];
+    if(existing)await gsUpdate("Costs","invNo",no,row);
+    else await gsWrite("Costs",row);
+    COSTS[no]={...row,invVal:row.invVal};
+    calcRow(no); flash("cost-success"); setSyncing("ok");
+  } catch(e){setSyncing("error");alert("Error: "+e.message);}
 }
 function renderCosts(){
   const sorted=[...INV].sort((a,b)=>b.no.localeCompare(a.no));
+  const fs=["prod","equip","transport","food","fb","inf","boost","other"];
   document.getElementById("cost-body").innerHTML=sorted.map(inv=>{
     const c=COSTS[inv.no]||{};
-    const fs=["prod","equip","transport","food","fb","inf","boost"];
-    const inputs=fs.map(f=>`<td><input type="number" style="width:76px;padding:4px 7px;border:1px solid #DDE1E7;border-radius:5px;font-size:11px;background:#fff" id="c_${inv.no}_${f}" value="${c[f]||""}" placeholder="0" oninput="calcRow(\'${inv.no}\')"></td>`).join("");
-    const t=c.total||0;const v=+inv.value||0;const p=v-t;const m=v>0?Math.round(p/v*100):0;
-    return`<tr>
-      <td style="font-weight:700;color:#1F3864;white-space:nowrap">${inv.no}</td>
-      <td style="white-space:nowrap">${inv.client}</td>
-      <td style="text-align:right;font-weight:600;white-space:nowrap">${fmt(v)}</td>
-      ${inputs}
-      <td style="text-align:right;font-weight:700;white-space:nowrap" id="ct_${inv.no}">${fmt(t)}</td>
-      <td style="text-align:right;white-space:nowrap" class="${p>=0?"profit-pos":"profit-neg"}" id="cp_${inv.no}">${fmt(p)}</td>
-      <td style="text-align:center;font-weight:700" id="cm_${inv.no}">${m}%</td>
-      <td><button class="btn-sm" onclick="saveCost(\'${inv.no}\')">Save</button></td>
-    </tr>`}).join("");
+    const inputs=fs.map(f=>`<td><input type="number" style="width:72px;padding:4px 6px;border:1px solid #DDE1E7;border-radius:5px;font-size:11px;background:#fff" id="c_${inv.no}_${f}" value="${c[f]||""}" placeholder="0" oninput="calcRow('${inv.no}')"></td>`).join("");
+    const t=c.total||0; const v=+inv.value||0; const p=v-t; const m=v>0?Math.round(p/v*100):0;
+    return`<tr><td style="font-weight:700;color:#1F3864;white-space:nowrap">${inv.no}</td><td style="white-space:nowrap">${inv.client||"-"}</td><td style="text-align:right;font-weight:600;white-space:nowrap">${fmt(v)}</td>${inputs}<td style="text-align:right;font-weight:700;white-space:nowrap" id="ct_${inv.no}">${fmt(t)}</td><td class="${p>=0?"profit-pos":"profit-neg"}" style="text-align:right;white-space:nowrap" id="cp_${inv.no}">${fmt(p)}</td><td style="text-align:center;font-weight:700" id="cm_${inv.no}">${m}%</td><td><button class="btn-sm" onclick="saveCost('${inv.no}')">Save</button></td></tr>`;
+  }).join("");
 }
 
-function saveVar(){
+// ── VARIABLE COSTS ────────────────────────────────────────────────────────
+async function saveVar(){
   const date=document.getElementById("var-date").value;
   const amount=document.getElementById("var-amount").value;
-  if(!date){alert("Please select a date.");return}
-  if(!amount||+amount<=0){alert("Please enter an amount greater than 0.");return}
-  VARS.push({date,cat:document.getElementById("var-cat").value,desc:document.getElementById("var-desc").value.trim(),amount:+amount});
-  persist();
-  ["var-date","var-amount","var-desc"].forEach(id=>document.getElementById(id).value="");
-  flash("var-success");renderVars();renderDash();
+  if(!date){alert("Please select a date.");return;}
+  if(!amount||+amount<=0){alert("Please enter an amount.");return;}
+  const row={id:uid(),date,cat:document.getElementById("var-cat").value,desc:document.getElementById("var-desc").value.trim(),amount:+amount};
+  setSyncing("syncing");
+  try {
+    await gsWrite("VariableCosts",row);
+    VARS.unshift(row);
+    ["var-date","var-amount","var-desc"].forEach(id=>document.getElementById(id).value="");
+    flash("var-success"); renderVars(); setSyncing("ok");
+  } catch(e){setSyncing("error");alert("Error: "+e.message);}
 }
-function delVar(i){VARS.splice(i,1);persist();renderVars();renderDash()}
+async function delVar(id){
+  try{await gsDel("VariableCosts","id",id);VARS=VARS.filter(v=>v.id!==id);renderVars();setSyncing("ok");}
+  catch(e){setSyncing("error");alert("Error: "+e.message);}
+}
 function renderVars(){
-  const sorted=[...VARS].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById("var-body").innerHTML=sorted.length?sorted.map((v,i)=>`
-    <tr>
-      <td style="white-space:nowrap">${fmtD(v.date)}</td>
-      <td><span class="badge ${CB[v.cat]||"bg-gray"}">${v.cat}</span></td>
-      <td>${v.desc||"-"}</td>
-      <td style="text-align:right;font-weight:600">${fmt(+v.amount)}</td>
-      <td style="color:#888">${moOf(v.date)}</td>
-      <td><button class="btn-sm btn-del" onclick="delVar(${i})">Del</button></td>
-    </tr>`).join(""):`<tr><td colspan="6" class="empty">No expenses logged yet</td></tr>`;
-  const byMo={};
-  VARS.forEach(v=>{const m=moOf(v.date);byMo[m]=(byMo[m]||0)+(+v.amount||0)});
-  document.getElementById("var-totals").innerHTML=Object.entries(byMo).sort((a,b)=>new Date("01 "+b[0])-new Date("01 "+a[0])).map(([m,t])=>`<div class="var-month-pill"><div style="color:#888;font-size:11px">${m}</div><div style="font-weight:700;color:#4B2D8F;font-size:14px">LKR ${fmt(t)}</div></div>`).join("")||"<span style=\"color:#888;font-size:12px\">No data yet</span>";
+  document.getElementById("var-body").innerHTML=VARS.length?VARS.map(v=>`<tr><td style="white-space:nowrap">${fmtD(v.date)}</td><td><span class="badge ${CBC[v.cat]||"bg-gray"}">${v.cat}</span></td><td>${v.desc||"-"}</td><td style="text-align:right;font-weight:600">${fmt(+v.amount)}</td><td style="color:#888">${moOf(v.date)}</td><td><button class="btn-sm btn-red" onclick="delVar('${v.id}')">Del</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty">No expenses yet</td></tr>`;
+  const byMo={};VARS.forEach(v=>{const m=moOf(v.date);byMo[m]=(byMo[m]||0)+(+v.amount||0);});
+  document.getElementById("var-totals").innerHTML=Object.entries(byMo).sort((a,b)=>new Date("01 "+b[0])-new Date("01 "+a[0])).map(([m,t])=>`<div style="background:#F5F7FA;border:1px solid #E8EAF0;border-radius:10px;padding:10px 16px;font-size:12px;min-width:120px"><div style="color:#888">${m}</div><div style="font-weight:700;color:#4B2D8F;font-size:14px">LKR ${fmt(t)}</div></div>`).join("")||"<span style='color:#888'>No data yet</span>";
 }
 
+// ── FIXED COSTS ───────────────────────────────────────────────────────────
+async function saveFixed(){
+  const desc=document.getElementById("fc-desc").value.trim();
+  const amt=document.getElementById("fc-amt").value;
+  if(!desc||!amt){alert("Please fill description and amount.");return;}
+  const editId=document.getElementById("fc-edit-id").value;
+  const row={id:editId||uid(),cat:document.getElementById("fc-cat").value,desc,amt:+amt,type:document.getElementById("fc-type").value};
+  setSyncing("syncing");
+  try {
+    if(editId){
+      await gsUpdate("FixedCosts","id",editId,row);
+      const idx=FIXED.findIndex(f=>f.id===editId); if(idx>=0)FIXED[idx]=row;
+    } else {
+      await gsWrite("FixedCosts",row);
+      FIXED.push(row);
+    }
+    cancelFixedEdit(); flash("fixed-success"); renderFixed(); setSyncing("ok");
+  } catch(e){setSyncing("error");alert("Error: "+e.message);}
+}
+function editFixed(id){
+  const f=FIXED.find(x=>x.id===id); if(!f)return;
+  document.getElementById("fc-cat").value=f.cat;
+  document.getElementById("fc-desc").value=f.desc;
+  document.getElementById("fc-amt").value=f.amt;
+  document.getElementById("fc-type").value=f.type;
+  document.getElementById("fc-edit-id").value=f.id;
+  document.getElementById("fc-cancel-btn").style.display="inline-flex";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+async function deleteFixed(id){
+  if(!confirm("Remove this fixed cost?"))return;
+  setSyncing("syncing");
+  try{await gsDel("FixedCosts","id",id);FIXED=FIXED.filter(f=>f.id!==id);renderFixed();setSyncing("ok");}
+  catch(e){setSyncing("error");alert("Error: "+e.message);}
+}
+function cancelFixedEdit(){
+  ["fc-desc","fc-amt","fc-edit-id"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("fc-cat").value="Salaries";
+  document.getElementById("fc-type").value="Fixed";
+  document.getElementById("fc-cancel-btn").style.display="none";
+}
 function renderFixed(){
-  document.getElementById("fixed-body").innerHTML=FIXED.map(f=>`<tr><td style="color:#555">${f.cat}</td><td style="font-weight:600">${f.desc}</td><td style="text-align:right;font-weight:600">${fmt(f.amt)}</td><td><span class="badge ${f.type==="Fixed"?"bg-blue":"bg-amber"}">${f.type}</span></td></tr>`).join("");
-  document.getElementById("fixed-total").textContent="LKR "+fmt(FIXED_TOTAL);
+  const total=FT();
+  document.getElementById("fixed-total-display").textContent=fmt(total);
+  document.getElementById("fixed-body").innerHTML=FIXED.length?FIXED.map(f=>`<tr><td><span class="badge ${CATC[f.cat]||"bg-gray"}">${f.cat}</span></td><td style="font-weight:600">${f.desc}</td><td style="text-align:right;font-weight:600">${fmt(f.amt)}</td><td><span class="badge ${f.type==="Fixed"?"bg-blue":"bg-amber"}">${f.type}</span></td><td><button class="btn-sm btn-blue" onclick="editFixed('${f.id}')">Edit</button></td><td><button class="btn-sm btn-red" onclick="deleteFixed('${f.id}')">Delete</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty">No fixed costs yet. Add one above.</td></tr>`;
 }
 
+// ── MONTHLY & YEARLY ──────────────────────────────────────────────────────
+function renderMonthly(){
+  const years=[...new Set(INV.map(i=>yearOf(i.date)).filter(Boolean))].sort();
+  if(!years.length)years.push(new Date().getFullYear().toString());
+  if(!selectedYear||!years.includes(selectedYear))selectedYear=years[years.length-1];
+  document.getElementById("year-tabs").innerHTML=years.map(y=>`<div class="year-tab${y===selectedYear?" active":""}" onclick="selectYear('${y}')">${y}</div>`).join("");
+  renderYearData(selectedYear);
+}
+function selectYear(y){selectedYear=y;renderMonthly();}
+function renderYearData(year){
+  const ft=FT();
+  const mns=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const rows=mns.map(mn=>{
+    const ml=`${mn} ${year}`;
+    const mI=INV.filter(i=>moOf(i.date)===ml);
+    const invoiced=mI.reduce((a,b)=>a+(+b.value||0),0);
+    const collected=INV.filter(i=>i.paidDate&&moOf(i.paidDate)===ml).reduce((a,b)=>a+(+b.value||0),0);
+    const outstanding=mI.filter(i=>i.status!=="Fully Paid").reduce((a,b)=>a+Math.max(0,(+b.value||0)-(+b.advance||0)),0);
+    const dc=Object.values(COSTS).filter(c=>{const inv=INV.find(i=>i.no===c.invNo);return inv&&moOf(inv.date)===ml}).reduce((a,b)=>a+(+b.total||0),0);
+    const vc=VARS.filter(v=>moOf(v.date)===ml).reduce((a,b)=>a+(+b.amount||0),0);
+    const gp=invoiced-dc; const np=gp-ft-vc;
+    return{ml,invoiced,collected,outstanding,dc,vc,ft,gp,np,margin:invoiced>0?Math.round(gp/invoiced*100):0,cr:invoiced>0?Math.round(collected/invoiced*100):0,has:invoiced>0||collected>0};
+  });
+  const tot=rows.reduce((a,r)=>({invoiced:a.invoiced+r.invoiced,collected:a.collected+r.collected,outstanding:a.outstanding+r.outstanding,dc:a.dc+r.dc,vc:a.vc+r.vc,gp:a.gp+r.gp,np:a.np+r.np}),{invoiced:0,collected:0,outstanding:0,dc:0,vc:0,gp:0,np:0});
+  const ytdM=tot.invoiced>0?Math.round(tot.gp/tot.invoiced*100):0;
+  const ytdR=tot.invoiced>0?Math.round(tot.collected/tot.invoiced*100):0;
+  document.getElementById("yearly-kpis").innerHTML=[{l:"Total Invoiced "+year,v:"LKR "+fmt(tot.invoiced),c:"#1F3864"},{l:"Total Collected "+year,v:"LKR "+fmt(tot.collected),c:"#375623"},{l:"Total Outstanding "+year,v:"LKR "+fmt(tot.outstanding),c:"#C00000"},{l:"Gross Profit "+year,v:"LKR "+fmt(tot.gp),c:tot.gp>=0?"#375623":"#C00000"},{l:"True Net P&L "+year,v:"LKR "+fmt(tot.np),c:tot.np>=0?"#375623":"#C00000"}].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div></div>`).join("");
+  document.getElementById("monthly-body").innerHTML=rows.map(r=>`<tr style="${!r.has?"opacity:.4":""}"><td style="font-weight:600;white-space:nowrap">${r.ml}</td><td style="text-align:right;font-weight:${r.invoiced>0?700:400}">${r.invoiced>0?"LKR "+fmt(r.invoiced):"-"}</td><td style="text-align:right;color:#375623;font-weight:${r.collected>0?700:400}">${r.collected>0?"LKR "+fmt(r.collected):"-"}</td><td style="text-align:right;color:${r.outstanding>0?"#C00000":"#888"}">${r.outstanding>0?"LKR "+fmt(r.outstanding):"-"}</td><td style="text-align:right">${r.dc>0?"LKR "+fmt(r.dc):"-"}</td><td style="text-align:right;color:#4B2D8F">${r.vc>0?"LKR "+fmt(r.vc):"-"}</td><td style="text-align:right;color:#C07A00">LKR ${fmt(r.ft)}</td><td style="text-align:right;font-weight:700;color:${r.gp>=0?"#375623":"#C00000"}">${r.invoiced>0?"LKR "+fmt(r.gp):"-"}</td><td style="text-align:right;font-weight:700;color:${r.np>=0?"#375623":"#C00000"}">${r.invoiced>0?"LKR "+fmt(r.np):"-"}</td><td style="text-align:center;color:${r.margin>=40?"#375623":r.margin>0?"#C07A00":"#888"}">${r.invoiced>0?r.margin+"%":"-"}</td><td style="text-align:center;color:${r.cr>=80?"#375623":r.cr>0?"#C07A00":"#888"}">${r.invoiced>0?r.cr+"%":"-"}</td></tr>`).join("")+`<tr class="month-total"><td>YEAR TOTAL</td><td style="text-align:right">LKR ${fmt(tot.invoiced)}</td><td style="text-align:right;color:#375623">LKR ${fmt(tot.collected)}</td><td style="text-align:right;color:#C00000">LKR ${fmt(tot.outstanding)}</td><td style="text-align:right">LKR ${fmt(tot.dc)}</td><td style="text-align:right;color:#4B2D8F">LKR ${fmt(tot.vc)}</td><td style="text-align:right;color:#C07A00">LKR ${fmt(ft*12)}</td><td style="text-align:right;color:${tot.gp>=0?"#375623":"#C00000"}">LKR ${fmt(tot.gp)}</td><td style="text-align:right;color:${tot.np>=0?"#375623":"#C00000"}">LKR ${fmt(tot.np)}</td><td style="text-align:center">${ytdM}%</td><td style="text-align:center">${ytdR}%</td></tr>`;
+  if(cMo)cMo.destroy();
+  const ctx=document.getElementById("chart-monthly");
+  if(ctx)cMo=new Chart(ctx,{type:"bar",data:{labels:mns,datasets:[{label:"Invoiced",data:rows.map(r=>r.invoiced),backgroundColor:"#378ADD",borderRadius:4},{label:"Collected",data:rows.map(r=>r.collected),backgroundColor:"#1D9E75",borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#888",font:{size:10}}},y:{ticks:{color:"#888",font:{size:10},callback:v=>"LKR "+fmt(v)}}}}});
+}
+
+// ── REPORTS ───────────────────────────────────────────────────────────────
+function generateReport(){
+  const type=document.getElementById("rpt-type").value;
+  const period=document.getElementById("rpt-period").value;
+  const pL={"this-month":"This Month","last-month":"Last Month","this-year":"This Year","all":"All Time"};
+  const mo=curMo(); const yr=new Date().getFullYear().toString();
+  const lastMo=new Date(new Date().getFullYear(),new Date().getMonth()-1,1).toLocaleString("en-GB",{month:"short",year:"numeric"});
+  const pF={"this-month":i=>moOf(i.date)===mo,"last-month":i=>moOf(i.date)===lastMo,"this-year":i=>yearOf(i.date)===yr,"all":()=>true}[period];
+  const filtered=INV.filter(pF); const ft=FT();
+  const hdr=t=>`<div class="card"><div style="font-size:16px;font-weight:700;color:#1F3864;margin-bottom:4px">${t}</div><div style="font-size:12px;color:#888;margin-bottom:16px">Nexus Strategy &bull; Generated ${fmtD(today())} &bull; ${pL[period]}</div>`;
+  let html="";
+  if(type==="pl"){
+    const inv=filtered.reduce((a,b)=>a+(+b.value||0),0);
+    const coll=filtered.filter(i=>i.status==="Fully Paid").reduce((a,b)=>a+(+b.value||0),0);
+    const dc=Object.values(COSTS).filter(c=>filtered.find(i=>i.no===c.invNo)).reduce((a,b)=>a+(+b.total||0),0);
+    const vc=VARS.filter(pF).reduce((a,b)=>a+(+b.amount||0),0);
+    const gp=inv-dc; const np=gp-ft-vc;
+    html=hdr("Profit & Loss Statement")+`<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:8px 0;border-bottom:1px solid #eee;font-weight:600">Total Invoiced</td><td style="text-align:right;font-weight:700;color:#1F3864">LKR ${fmt(inv)}</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888">Direct Project Costs</td><td style="text-align:right;color:#C00000">(LKR ${fmt(dc)})</td></tr><tr style="background:#F5F7FA"><td style="padding:10px 8px;font-weight:700">Gross Profit</td><td style="text-align:right;font-weight:800;color:${gp>=0?"#375623":"#C00000"}">LKR ${fmt(gp)}</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888">Gross Margin %</td><td style="text-align:right">${inv>0?Math.round(gp/inv*100):0}%</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888">Fixed Costs</td><td style="text-align:right;color:#C07A00">(LKR ${fmt(ft)})</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888">Variable Costs</td><td style="text-align:right;color:#4B2D8F">(LKR ${fmt(vc)})</td></tr><tr style="background:#F5F7FA"><td style="padding:10px 8px;font-weight:700">True Net Profit / Loss</td><td style="text-align:right;font-weight:800;color:${np>=0?"#375623":"#C00000"}">LKR ${fmt(np)}</td></tr><tr><td style="padding:8px 0;color:#888">Total Collected</td><td style="text-align:right;font-weight:600;color:#375623">LKR ${fmt(coll)}</td></tr><tr><td style="padding:8px 0;color:#888">Collection Rate</td><td style="text-align:right">${inv>0?Math.round(coll/inv*100):0}%</td></tr></table></div>`;
+  } else if(type==="invoice"){
+    html=hdr("Invoice Summary — "+filtered.length+" Invoices")+`<div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Date</th><th>Client</th><th>Description</th><th>Value</th><th>Advance</th><th>Balance</th><th>Status</th></tr></thead><tbody>${[...filtered].sort((a,b)=>b.no.localeCompare(a.no)).map(i=>`<tr><td style="font-weight:700">${i.no}</td><td>${fmtD(i.date)}</td><td>${i.client}</td><td>${i.desc}</td><td style="text-align:right">${fmt(+i.value)}</td><td style="text-align:right">${fmt(+i.advance)}</td><td style="text-align:right;color:#C00000;font-weight:700">${fmt(Math.max(0,(+i.value||0)-(+i.advance||0)))}</td><td><span class="badge ${SBS[i.status]||"bg-gray"}">${i.status}</span></td></tr>`).join("")}</tbody></table></div></div>`;
+  } else if(type==="outstanding"){
+    const out=INV.filter(i=>i.status!=="Fully Paid");
+    html=hdr("Outstanding Balances — "+out.length+" Invoices")+`<div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Date</th><th>Client</th><th>Description</th><th>Value</th><th>Advance</th><th>Balance Due</th><th>Days Out</th></tr></thead><tbody>${[...out].sort((a,b)=>daysAgo(b.date)-daysAgo(a.date)).map(i=>{const d=daysAgo(i.date);const bal=Math.max(0,(+i.value||0)-(+i.advance||0));return`<tr><td style="font-weight:700">${i.no}</td><td>${fmtD(i.date)}</td><td>${i.client}</td><td>${i.desc}</td><td style="text-align:right">${fmt(+i.value)}</td><td style="text-align:right">${fmt(+i.advance)}</td><td style="text-align:right;font-weight:700;color:#C00000">LKR ${fmt(bal)}</td><td style="text-align:center;font-weight:600;color:${d>60?"#C00000":d>30?"#C07A00":"#1a1a1a"}">${d} days</td></tr>`}).join("")}</tbody><tfoot><tr style="background:#F5F7FA;font-weight:700"><td colspan="6">TOTAL OUTSTANDING</td><td style="text-align:right;color:#C00000">LKR ${fmt(out.reduce((a,b)=>a+Math.max(0,(+b.value||0)-(+b.advance||0)),0))}</td><td></td></tr></tfoot></table></div></div>`;
+  } else if(type==="client"){
+    html=hdr("Revenue by Client")+`<div class="table-wrap"><table><thead><tr><th>Client</th><th>Invoices</th><th>Total Invoiced</th><th>Total Collected</th><th>Outstanding</th><th>Collection Rate</th></tr></thead><tbody>${CLIENTS.map(cl=>{const cI=filtered.filter(i=>i.client===cl.name);if(!cI.length)return"";const tot=cI.reduce((a,b)=>a+(+b.value||0),0);const coll=cI.filter(i=>i.status==="Fully Paid").reduce((a,b)=>a+(+b.value||0),0);const out=cI.filter(i=>i.status!=="Fully Paid").reduce((a,b)=>a+Math.max(0,(+b.value||0)-(+b.advance||0)),0);const rate=tot>0?Math.round(coll/tot*100):0;return`<tr><td style="font-weight:700">${cl.name}</td><td style="text-align:center">${cI.length}</td><td style="text-align:right;font-weight:600">${fmt(tot)}</td><td style="text-align:right;color:#375623;font-weight:600">${fmt(coll)}</td><td style="text-align:right;color:#C00000;font-weight:600">${fmt(out)}</td><td style="text-align:center;font-weight:600;color:${rate>=80?"#375623":rate>0?"#C07A00":"#888"}">${rate}%</td></tr>`}).join("")}</tbody></table></div></div>`;
+  }
+  document.getElementById("report-output").innerHTML=html;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
 function renderDash(){
-  const mo=curMo();
-  const moInvs=INV.filter(i=>moOf(i.date)===mo);
-  const totInv=moInvs.reduce((a,b)=>a+(+b.value||0),0);
+  const mo=curMo(); const ft=FT();
+  const moI=INV.filter(i=>moOf(i.date)===mo);
+  const totInv=moI.reduce((a,b)=>a+(+b.value||0),0);
   const totColl=INV.filter(i=>i.paidDate&&moOf(i.paidDate)===mo).reduce((a,b)=>a+(+b.value||0),0);
-  const totOut=INV.filter(i=>i.status!=="Full Payment Received").reduce((a,b)=>a+Math.max(0,(+b.value||0)-(+b.advance||0)),0);
+  const totOut=INV.filter(i=>i.status!=="Fully Paid").reduce((a,b)=>a+Math.max(0,(+b.value||0)-(+b.advance||0)),0);
   const allC=Object.values(COSTS);
-  const totCostVal=allC.reduce((a,b)=>a+(+b.total||0),0);
-  const totRevC=allC.reduce((a,b)=>a+(+b.invVal||0),0);
-  const gm=totRevC>0?((totRevC-totCostVal)/totRevC*100):0;
+  const tCV=allC.reduce((a,b)=>a+(+b.total||0),0);
+  const tRV=allC.reduce((a,b)=>a+(+b.invVal||0),0);
+  const gm=tRV>0?(tRV-tCV)/tRV*100:0;
   const moVar=VARS.filter(v=>moOf(v.date)===mo).reduce((a,b)=>a+(+b.amount||0),0);
-  const netP=totInv-totCostVal-FIXED_TOTAL-moVar;
+  const netP=totInv-tCV-ft-moVar;
   refreshBadge();
-  const nextN=nextNo();
   document.getElementById("kpi-grid").innerHTML=[
-    {l:"Total Invoiced - "+mo,v:"LKR "+fmt(totInv),s:moInvs.length+" invoices",c:"#1F3864"},
-    {l:"Collected - "+mo,v:"LKR "+fmt(totColl),s:totInv>0?Math.round(totColl/totInv*100)+"% collection rate":"",c:totColl>0?"#375623":"#C00000"},
-    {l:"Total Outstanding",v:"LKR "+fmt(totOut),s:INV.filter(i=>i.status!=="Full Payment Received").length+" unpaid invoices",c:"#C00000"},
-    {l:"Gross Margin (costed jobs)",v:Math.round(gm)+"%",s:gm>=40?"Above 40% target":"Below 40% - needs attention",c:gm>=40?"#375623":"#C07A00"},
-    {l:"Variable Costs - "+mo,v:"LKR "+fmt(moVar),s:VARS.filter(v=>moOf(v.date)===mo).length+" entries",c:"#4B2D8F"},
-    {l:"Fixed Costs / Month",v:"LKR "+fmt(FIXED_TOTAL),s:"Breakeven ~LKR "+fmt(FIXED_TOTAL/0.5),c:"#C07A00"},
+    {l:"Total Invoiced \u2014 "+mo,v:"LKR "+fmt(totInv),s:moI.length+" invoices raised",c:"#1F3864"},
+    {l:"Collected \u2014 "+mo,v:"LKR "+fmt(totColl),s:totInv>0?Math.round(totColl/totInv*100)+"% collection rate":"",c:totColl>0?"#375623":"#888"},
+    {l:"Total Outstanding",v:"LKR "+fmt(totOut),s:INV.filter(i=>i.status!=="Fully Paid").length+" unpaid invoices",c:"#C00000"},
+    {l:"Gross Margin",v:Math.round(gm)+"%",s:gm>=40?"Above 40% target":"Below 40% \u2014 needs attention",c:gm>=40?"#375623":"#C07A00"},
+    {l:"Variable Costs \u2014 "+mo,v:"LKR "+fmt(moVar),s:VARS.filter(v=>moOf(v.date)===mo).length+" entries",c:"#4B2D8F"},
+    {l:"Fixed Costs / Month",v:"LKR "+fmt(ft),s:"Breakeven ~LKR "+fmt(ft>0?ft/0.5:0),c:"#C07A00"},
     {l:"True Net Profit / Loss",v:"LKR "+fmt(netP),s:"Revenue minus all costs",c:netP>=0?"#375623":"#C00000"},
-    {l:"Next Invoice Number",v:nextN,s:"Auto-assigned on save",c:"#185FA5"},
+    {l:"Next Invoice",v:nextNo(),s:"Auto-assigned on save",c:"#185FA5"},
   ].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join("");
+
   document.getElementById("be-month").textContent=mo;
-  const beT=FIXED_TOTAL+moVar;
-  const bePct=beT>0?Math.min(100,Math.round(totColl/beT*100)):0;
+  const beT=ft+moVar; const bePct=beT>0?Math.min(100,Math.round(totColl/beT*100)):0;
   document.getElementById("be-label").innerHTML=`<strong>LKR ${fmt(totColl)}</strong> <span style="color:#888">collected of LKR ${fmt(beT)} needed</span>`;
-  const bar=document.getElementById("be-bar");
-  bar.style.width=bePct+"%";bar.style.background=bePct>=100?"#375623":bePct>=60?"#C07A00":"#C00000";
-  document.getElementById("be-sub").textContent=bePct>=100?"Breakeven achieved this month!":"Need LKR "+fmt(Math.max(0,beT-totColl))+" more to break even ("+bePct+"% there)";
+  const bar=document.getElementById("be-bar"); bar.style.width=bePct+"%"; bar.style.background=bePct>=100?"#375623":bePct>=60?"#C07A00":"#C00000";
+  document.getElementById("be-sub").textContent=bePct>=100?"Breakeven achieved! \u2713":"Need LKR "+fmt(Math.max(0,beT-totColl))+" more ("+bePct+"% there)";
+
   const aging={"0-30 days":0,"31-60 days":0,"61-90 days":0,"90+ days":0};
   const agC={"0-30 days":"#375623","31-60 days":"#C07A00","61-90 days":"#C00000","90+ days":"#7B0000"};
-  INV.filter(i=>i.status!=="Full Payment Received").forEach(i=>{
-    const d=daysAgo(i.date);const b=Math.max(0,(+i.value||0)-(+i.advance||0));
-    if(d<=30)aging["0-30 days"]+=b;else if(d<=60)aging["31-60 days"]+=b;else if(d<=90)aging["61-90 days"]+=b;else aging["90+ days"]+=b;
-  });
+  INV.filter(i=>i.status!=="Fully Paid").forEach(i=>{const d=daysAgo(i.date);const b=Math.max(0,(+i.value||0)-(+i.advance||0));if(d<=30)aging["0-30 days"]+=b;else if(d<=60)aging["31-60 days"]+=b;else if(d<=90)aging["61-90 days"]+=b;else aging["90+ days"]+=b;});
   document.getElementById("aging-grid").innerHTML=Object.entries(aging).map(([k,v])=>`<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:${agC[k]};font-weight:600">${k}</span><span style="font-size:14px;font-weight:700">LKR ${fmt(v)}</span></div>`).join("");
-  const recent=[...INV].sort((a,b)=>b.no.localeCompare(a.no)).slice(0,8);
-  document.getElementById("dash-body").innerHTML=recent.map(i=>`<tr>
-    <td style="font-weight:700;color:#1F3864">${i.no}</td>
-    <td>${i.client}</td><td>${i.brand||"-"}</td>
-    <td style="text-align:right;font-weight:600">LKR ${fmt(+i.value)}</td>
-    <td><span class="badge ${SB[i.status]||"bg-gray"}">${i.status}</span></td>
-    <td style="text-align:center;color:${daysAgo(i.date)>60?"#C00000":"#1a1a1a"}">${i.status==="Full Payment Received"?"-":daysAgo(i.date)+" days"}</td>
-  </tr>`).join("");
+
+  const now=new Date(); const mL=[],rD=[],cD=[],pD=[],mD=[],iD=[],colD=[];
+  for(let mi=5;mi>=0;mi--){
+    const d2=new Date(now.getFullYear(),now.getMonth()-mi,1);
+    const ml=d2.toLocaleString("en-GB",{month:"short",year:"numeric"});
+    mL.push(d2.toLocaleString("en-GB",{month:"short"}));
+    const mI2=INV.filter(i=>moOf(i.date)===ml).reduce((a,b)=>a+(+b.value||0),0);
+    const mC=Object.values(COSTS).filter(c=>{const inv=INV.find(i=>i.no===c.invNo);return inv&&moOf(inv.date)===ml}).reduce((a,b)=>a+(+b.total||0),0);
+    const mCol=INV.filter(i=>i.paidDate&&moOf(i.paidDate)===ml).reduce((a,b)=>a+(+b.value||0),0);
+    rD.push(mI2);cD.push(mC);pD.push(Math.max(0,mI2-mC));mD.push(mI2>0?Math.round((mI2-mC)/mI2*100):null);iD.push(mI2);colD.push(mCol);
+  }
+  if(cRev)cRev.destroy();
+  cRev=new Chart(document.getElementById("chart-rev"),{type:"bar",data:{labels:mL,datasets:[{label:"Revenue",data:rD,backgroundColor:"#378ADD",borderRadius:4},{label:"Costs",data:cD,backgroundColor:"#E24B4A",borderRadius:4},{label:"Gross Profit",data:pD,backgroundColor:"#1D9E75",borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#888",font:{size:11}}},y:{ticks:{color:"#888",font:{size:10},callback:v=>"LKR "+fmt(v)}}}}});
+  if(cMarg)cMarg.destroy();
+  cMarg=new Chart(document.getElementById("chart-margin"),{type:"line",data:{labels:mL,datasets:[{label:"Margin %",data:mD,borderColor:"#1D9E75",backgroundColor:"rgba(29,158,117,.08)",fill:true,tension:.3,pointRadius:5,pointBackgroundColor:"#1D9E75",spanGaps:true},{label:"Target 40%",data:Array(6).fill(40),borderColor:"#E24B4A",borderDash:[5,4],borderWidth:1.5,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#888",font:{size:11}}},y:{min:0,max:100,ticks:{color:"#888",font:{size:10},callback:v=>v+"%"}}}}});
+  if(cIC)cIC.destroy();
+  cIC=new Chart(document.getElementById("chart-invcoll"),{type:"bar",data:{labels:mL,datasets:[{label:"Invoiced",data:iD,backgroundColor:"#378ADD",borderRadius:4},{label:"Collected",data:colD,backgroundColor:"#1D9E75",borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#888",font:{size:11}}},y:{ticks:{color:"#888",font:{size:10},callback:v=>"LKR "+fmt(v)}}}}});
+  const byC={};INV.forEach(i=>{byC[i.client||"Unknown"]=(byC[i.client||"Unknown"]||0)+(+i.value||0);});
+  const srt=Object.entries(byC).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+  if(cCl)cCl.destroy();
+  if(srt.length)cCl=new Chart(document.getElementById("chart-client"),{type:"bar",indexAxis:"y",data:{labels:srt.map(x=>x[0]),datasets:[{data:srt.map(x=>x[1]),backgroundColor:["#378ADD","#1D9E75","#EF9F27","#E24B4A","#7E57C2","#888780"],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#888",font:{size:10},callback:v=>"LKR "+fmt(v)}},y:{ticks:{color:"#555",font:{size:11}}}}}});
+  const db=document.getElementById("dash-body");
+  if(db)db.innerHTML=[...INV].sort((a,b)=>b.no.localeCompare(a.no)).slice(0,8).map(i=>`<tr><td style="font-weight:700;color:#1F3864">${i.no}</td><td>${i.client||"-"}</td><td>${i.brand||"-"}</td><td style="text-align:right">LKR ${fmt(+i.value)}</td><td><span class="badge ${SBS[i.status]||"bg-gray"}">${i.status}</span></td><td style="text-align:center;color:${daysAgo(i.date)>60?"#C00000":"#1a1a1a"}">${i.status==="Fully Paid"?"-":daysAgo(i.date)+" days"}</td></tr>`).join("");
 }
 
-function defaultInv(){return[
-  {no:"26-001",date:"2026-01-04",brand:"Digi Brush",client:"DigiBrush",desc:"Graphic Contents",value:"60000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
-  {no:"26-002",date:"2026-01-05",brand:"Dimo",client:"DigiBrush",desc:"Third Party Community Pages Content Campaign",value:"370000",advance:"370000",status:"Advance Received",paidDate:null,dueDate:null},
-  {no:"26-003",date:"2026-01-17",brand:"BYD",client:"DigiBrush",desc:"NEV Year Video Productions with Influencers",value:"450000",advance:"450000",status:"Advance Received",paidDate:null,dueDate:null},
-  {no:"26-004",date:"2026-01-19",brand:"DC/CMN",client:"DC/CMN",desc:"Feeding Comments",value:"10000",advance:"10000",status:"Full Payment Received",paidDate:"2026-01-25",dueDate:null},
-  {no:"26-005",date:"2026-01-23",brand:"Hutch",client:"DigiBrush",desc:"Hutch DVC",value:"60000",advance:"60000",status:"Advance Received",paidDate:null,dueDate:null},
-  {no:"26-006",date:"2026-01-26",brand:"SJB",client:"SJB",desc:"Graphics Video Edits and Animations - Focal Point YT Program",value:"47000",advance:"47000",status:"Advance Received",paidDate:null,dueDate:null},
-  {no:"26-007",date:"2026-01-30",brand:"Jasmin",client:"Jasmin",desc:"Seeking Facebook Comments",value:"50000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
-  {no:"26-008",date:"2026-01-30",brand:"Nestle",client:"Jasmin",desc:"Facebook Comments Feeding - Nangrow",value:"60000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
-  {no:"26-009",date:"2026-01-30",brand:"Hutch",client:"DigiBrush",desc:"Comment Army - Hutch",value:"85000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
-  {no:"26-010",date:"2026-01-30",brand:"Keells",client:"DigiBrush",desc:"Keells Nexus App Shoot",value:"325000",advance:"325000",status:"Advance Received",paidDate:null,dueDate:null},
-  {no:"26-011",date:"2026-02-04",brand:"BYD",client:"DigiBrush",desc:"BYD Comments",value:"250000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
-  {no:"26-012",date:"2026-02-05",brand:"Hutch",client:"DigiBrush",desc:"Hutch Event - Pettah",value:"100000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
-  {no:"26-013",date:"2026-02-09",brand:"Digi Brush",client:"DigiBrush",desc:"Graphic Contents",value:"60000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
-  {no:"26-014",date:"2026-02-15",brand:"JAC",client:"DigiBrush",desc:"JAC Monthly Content Development January",value:"150000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-015",date:"2026-02-09",brand:"JAC",client:"DigiBrush",desc:"JAC Monthly Content Development February",value:"150000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-016",date:"2026-02-13",brand:"JAC",client:"DigiBrush",desc:"JAC T9 Owner Meetup Event Coverage",value:"305000",advance:"52500",status:"Advance Received",paidDate:null,dueDate:null},
-  {no:"26-017",date:"2026-02-20",brand:"Kothmale",client:"DigiBrush",desc:"Kothmale Iron Kids Event Coverage and Production",value:"175000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-018",date:"2026-02-20",brand:"Ride",client:"DigiBrush",desc:"Iron Men",value:"225000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-019",date:"2026-02-23",brand:"Commercial Bank",client:"DC/CMN",desc:"Campaign",value:"656000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-020",date:"2026-02-26",brand:"Hutch",client:"DigiBrush",desc:"Comment Army",value:"85000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-021",date:"2026-03-04",brand:"Kothmale",client:"DigiBrush",desc:"Kothmale Iron Kids Additional 5 Videos",value:"45000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-022",date:"2026-03-04",brand:"United Motors",client:"DigiBrush",desc:"United Motors EV Campaign Teaser",value:"550000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-023",date:"2026-03-04",brand:"United Motors",client:"DigiBrush",desc:"United Motors EV Campaign Auto Vision",value:"600000",advance:"600000",status:"Full Payment Received",paidDate:"2026-03-10",dueDate:null},
-  {no:"26-024",date:"2026-03-09",brand:"BYD",client:"DigiBrush",desc:"BYD Patrol Que Video",value:"84600",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-025",date:"2026-03-09",brand:"BYD",client:"DigiBrush",desc:"BYD Atto 1 Video",value:"157000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-  {no:"26-026",date:"2026-03-09",brand:"SJB",client:"SJB",desc:"Voice Recordings",value:"35000",advance:"0",status:"Unpaid",paidDate:null,dueDate:null},
-  {no:"26-027",date:"2026-03-11",brand:"Commercial Bank",client:"DC/CMN",desc:"Commercial Comments",value:"23000",advance:"0",status:"Final Invoice Sent",paidDate:null,dueDate:null},
-]}
+// ── CASH FLOW ─────────────────────────────────────────────────────────────
+let cfChart = null;
+const cfOverrides = {}; // invNo -> days override
 
-function defaultCosts(){return{
-  "26-022":{invNo:"26-022",invVal:550000,prod:0,equip:7000,transport:7000,food:0,fb:150000,inf:0,boost:90000,total:254000},
-  "26-023":{invNo:"26-023",invVal:600000,prod:319000,equip:0,transport:2000,food:0,fb:0,inf:0,boost:0,total:321000},
-  "26-024":{invNo:"26-024",invVal:84600,prod:0,equip:0,transport:0,food:0,fb:45000,inf:0,boost:9600,total:54600},
-  "26-025":{invNo:"26-025",invVal:157000,prod:0,equip:0,transport:0,food:0,fb:75000,inf:0,boost:32000,total:107000},
-}}
+function renderCashflow() {
+  const opening  = +(document.getElementById("cf-opening")?.value||0);
+  const defDays  = +(document.getElementById("cf-default-days")?.value||45);
+  const numMonths= +(document.getElementById("cf-months")?.value||3);
+  const ft       = FT();
 
-function defaultVars(){return[
-  {date:"2026-02-01",cat:"Fuel / Transport",desc:"Fuel - JAC Meeting",amount:2000},
-  {date:"2026-02-01",cat:"Marketing & Promotions",desc:"Meta Boosting - General",amount:9630},
-  {date:"2026-02-03",cat:"Team Meals & Entertainment",desc:"JAC Big Match - Food and Bev",amount:7490},
-  {date:"2026-02-05",cat:"Ad Hoc Freelancer Payments",desc:"Loan Settle - Anuja",amount:1500},
-  {date:"2026-02-08",cat:"Fuel / Transport",desc:"Fuel - Auto Vision",amount:2000},
-  {date:"2026-02-10",cat:"Other Expenses",desc:"Loan to Nexus",amount:60000},
-  {date:"2026-02-12",cat:"Team Meals & Entertainment",desc:"7M Opening",amount:10000},
-  {date:"2026-02-12",cat:"Team Meals & Entertainment",desc:"Nira Opening",amount:10000},
-  {date:"2026-02-15",cat:"Fuel / Transport",desc:"Fuel - NCW",amount:2000},
-  {date:"2026-02-18",cat:"Fuel / Transport",desc:"Fuel - JAC Trucks Shoot",amount:2000},
-  {date:"2026-02-18",cat:"Team Meals & Entertainment",desc:"JAC T9 Shoot - Food and Bev",amount:1000},
-  {date:"2026-02-20",cat:"Office Supplies & Printing",desc:"Gimbal Rentals 3 Days",amount:12000},
-  {date:"2026-02-01",cat:"Team Meals & Entertainment",desc:"Cake",amount:3780},
-  {date:"2026-03-01",cat:"Ad Hoc Freelancer Payments",desc:"Pending Sithum KFC",amount:190000},
-  {date:"2026-03-01",cat:"Ad Hoc Freelancer Payments",desc:"Pending Ride Story Edits",amount:13000},
-]}
+  // Build month targets — each is {month label, 25th date, invoices expected, total inflow, shortfall}
+  const now = new Date(); now.setHours(0,0,0,0);
+  const months = [];
+  for(let m=0; m<numMonths; m++){
+    const d = new Date(now.getFullYear(), now.getMonth()+m, 25);
+    months.push({
+      label: d.toLocaleString("en-GB",{month:"long",year:"numeric"}),
+      shortLabel: d.toLocaleString("en-GB",{month:"short",year:"numeric"}),
+      payDay: new Date(d),
+      moKey: d.toLocaleString("en-GB",{month:"short",year:"numeric"}),
+      inflows: 0,
+      invoices: [],
+      fixedCost: ft,
+    });
+  }
 
-load();
-document.getElementById("today-display").textContent=new Date().toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"long",year:"numeric"});
-refreshBadge();
-renderDash();
-renderFixed();
+  // Assign outstanding invoices to months based on expected payment date
+  const outstanding = INV.filter(i=>i.status!=="Fully Paid");
+  const unassigned = [];
+
+  outstanding.forEach(inv=>{
+    const bal = Math.max(0,(+inv.value||0)-(+inv.advance||0));
+    if(bal<=0) return;
+    if(!inv.date){ unassigned.push({inv,bal}); return; }
+
+    // Get expected date
+    const days = cfOverrides[inv.no] || defDays;
+    const expDate = new Date(inv.date+"T00:00:00");
+    expDate.setDate(expDate.getDate()+days);
+
+    // Assign to the month whose 25th is >= expDate (i.e. earliest month we can collect before the 25th)
+    let assigned = false;
+    for(let mi=0; mi<months.length; mi++){
+      if(expDate <= months[mi].payDay){
+        months[mi].inflows += bal;
+        months[mi].invoices.push({inv,bal,expDate,days});
+        assigned = true;
+        break;
+      }
+    }
+    if(!assigned) unassigned.push({inv,bal,expDate,days});
+  });
+
+  // Build running balance
+  let runBal = opening;
+  const container = document.getElementById("cf-months-container");
+  if(!container) return;
+
+  let html = "";
+
+  months.forEach((mo, mi) => {
+    const net = mo.inflows - mo.fixedCost;
+    const balBefore = runBal;
+    runBal += net;
+    const safe = balBefore + mo.inflows >= mo.fixedCost;
+    const shortfall = Math.max(0, mo.fixedCost - (balBefore + mo.inflows));
+    const surplus   = Math.max(0, (balBefore + mo.inflows) - mo.fixedCost);
+    const pct       = mo.fixedCost > 0 ? Math.min(100, Math.round((balBefore+mo.inflows)/mo.fixedCost*100)) : 100;
+
+    // Status badge
+    const statusBadge = safe
+      ? `<span class="badge bg-green">&#10003; Covered</span>`
+      : `<span class="badge bg-red">&#9888; Shortfall</span>`;
+
+    // Coverage bar colour
+    const barColor = pct>=100?"#1D9E75":pct>=70?"#C07A00":"#C00000";
+
+    // Invoice rows for this month
+    const invRows = mo.invoices.length
+      ? mo.invoices.sort((a,b)=>a.expDate-b.expDate).map(({inv,bal,expDate,days})=>{
+          const overrideVal = cfOverrides[inv.no]||defDays;
+          const isOverdue = expDate < now;
+          return `<tr style="${isOverdue?"background:#FFF8F0":""}">
+            <td style="font-weight:700;color:#1F3864">${inv.no}${isOverdue?` <span class="badge bg-red" style="font-size:9px">OVERDUE</span>`:""}</td>
+            <td style="font-weight:600">${inv.client||"-"}</td>
+            <td>${inv.brand||"-"}</td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${inv.desc}">${inv.desc||"-"}</td>
+            <td style="text-align:right;font-weight:600">${fmt(+inv.value)}</td>
+            <td style="text-align:right;font-weight:700;color:#C00000">${fmt(bal)}</td>
+            <td style="white-space:nowrap;color:#888">${fmtD(inv.date)}</td>
+            <td style="white-space:nowrap;font-weight:600;color:${isOverdue?"#C00000":"#375623"}">${fmtD(expDate.toISOString().slice(0,10))}</td>
+            <td>
+              <select onchange="cfSetOverride('${inv.no}',this.value)" style="padding:4px 8px;border:1px solid #DDE1E7;border-radius:6px;font-size:11px">
+                <option value="14" ${overrideVal==14?"selected":""}>14 days</option>
+                <option value="30" ${overrideVal==30?"selected":""}>30 days</option>
+                <option value="45" ${overrideVal==45?"selected":""}>45 days</option>
+                <option value="60" ${overrideVal==60?"selected":""}>60 days</option>
+              </select>
+            </td>
+          </tr>`;
+        }).join("")
+      : `<tr><td colspan="9" style="text-align:center;padding:20px;color:#888;font-size:12px">No payments expected before the 25th of this month</td></tr>`;
+
+    // Client summary for this month
+    const byClient = {};
+    mo.invoices.forEach(({inv,bal})=>{
+      byClient[inv.client||"Unknown"]=(byClient[inv.client||"Unknown"]||0)+bal;
+    });
+    const clientSummary = Object.entries(byClient).sort((a,b)=>b[1]-a[1])
+      .map(([c,v])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F0F2F5;font-size:12px"><span style="font-weight:600">${c}</span><span style="font-weight:700;color:#1D9E75">LKR ${fmt(v)}</span></div>`)
+      .join("") || `<div style="font-size:12px;color:#888;padding:8px 0">No inflows expected</div>`;
+
+    html += `
+    <div class="card" style="border-top:4px solid ${safe?"#1D9E75":"#C00000"};margin-bottom:20px">
+      <!-- Month header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:#1F3864">${mo.label}</div>
+          <div style="font-size:12px;color:#888;margin-top:3px">Payment day: <strong style="color:#1F3864">25 ${mo.label}</strong> &bull; All salaries, rent &amp; suppliers paid on this date</div>
+        </div>
+        <div style="text-align:right">${statusBadge}
+          <div style="font-size:12px;color:#888;margin-top:6px">${safe?`Surplus: <strong style="color:#375623">LKR ${fmt(surplus)}</strong>`:`Need <strong style="color:#C00000">LKR ${fmt(shortfall)}</strong> more`}</div>
+        </div>
+      </div>
+
+      <!-- Coverage bar -->
+      <div style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+          <span style="color:#888">Coverage of fixed costs</span>
+          <span style="font-weight:700;color:${barColor}">${pct}%</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-top:4px">
+          <span>Cash before 25th: <strong style="color:#1F3864">LKR ${fmt(balBefore+mo.inflows)}</strong></span>
+          <span>Fixed costs on 25th: <strong style="color:#C07A00">LKR ${fmt(mo.fixedCost)}</strong></span>
+        </div>
+      </div>
+
+      <!-- 3 col summary -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="background:#F5F7FA;border-radius:8px;padding:14px">
+          <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Opening Balance</div>
+          <div style="font-size:20px;font-weight:800;color:#1F3864">LKR ${fmt(balBefore)}</div>
+          <div style="font-size:11px;color:#888;margin-top:3px">Cash at start of month</div>
+        </div>
+        <div style="background:#E8F5EE;border-radius:8px;padding:14px">
+          <div style="font-size:11px;color:#375623;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Expected Inflows</div>
+          <div style="font-size:20px;font-weight:800;color:#1D9E75">LKR ${fmt(mo.inflows)}</div>
+          <div style="font-size:11px;color:#888;margin-top:3px">${mo.invoices.length} invoice${mo.invoices.length!==1?"s":""} expected before 25th</div>
+        </div>
+        <div style="background:${safe?"#E8F5EE":"#FDECEA"};border-radius:8px;padding:14px">
+          <div style="font-size:11px;color:${safe?"#375623":"#C00000"};font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">After 25th Payment</div>
+          <div style="font-size:20px;font-weight:800;color:${runBal>=0?"#375623":"#C00000"}">LKR ${fmt(runBal)}</div>
+          <div style="font-size:11px;color:#888;margin-top:3px">Closing balance this month</div>
+        </div>
+      </div>
+
+      <!-- Two col: client breakdown + invoice table -->
+      <div style="display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">By Client</div>
+          ${clientSummary}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Invoices Expected Before 25th</div>
+          <div style="overflow-x:auto"><table>
+            <thead><tr><th>Invoice No</th><th>Client</th><th>Brand</th><th>Description</th><th>Value (LKR)</th><th>Balance Due (LKR)</th><th>Invoice Date</th><th>Expected By</th><th>Days Override</th></tr></thead>
+            <tbody>${invRows}</tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Unassigned / beyond range
+  if(unassigned.length){
+    const unRows = unassigned.map(({inv,bal,expDate,days})=>{
+      const overrideVal = cfOverrides[inv.no]||defDays;
+      const expStr = expDate ? fmtD(expDate.toISOString().slice(0,10)) : "No date set";
+      return `<tr>
+        <td style="font-weight:700;color:#1F3864">${inv.no}</td>
+        <td>${inv.client||"-"}</td>
+        <td>${inv.brand||"-"}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${inv.desc||"-"}</td>
+        <td style="text-align:right;font-weight:600">${fmt(+inv.value)}</td>
+        <td style="text-align:right;font-weight:700;color:#C00000">${fmt(bal)}</td>
+        <td>${fmtD(inv.date)}</td>
+        <td style="color:#888">${expStr}</td>
+        <td><select onchange="cfSetOverride('${inv.no}',this.value)" style="padding:4px 8px;border:1px solid #DDE1E7;border-radius:6px;font-size:11px">
+          <option value="14" ${overrideVal==14?"selected":""}>14 days</option>
+          <option value="30" ${overrideVal==30?"selected":""}>30 days</option>
+          <option value="45" ${overrideVal==45?"selected":""}>45 days</option>
+          <option value="60" ${overrideVal==60?"selected":""}>60 days</option>
+        </select></td>
+      </tr>`;
+    }).join("");
+    html += `<div class="card" style="border-top:4px solid #888">
+      <div style="font-size:14px;font-weight:700;color:#888;margin-bottom:12px">Beyond projection range / No date — ${unassigned.length} invoice${unassigned.length!==1?"s":""}</div>
+      <div class="info-note" style="margin-bottom:12px">These invoices are expected after your projection window or have no invoice date. Adjust the days override to pull them into a month.</div>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th>Invoice No</th><th>Client</th><th>Brand</th><th>Description</th><th>Value (LKR)</th><th>Balance Due (LKR)</th><th>Invoice Date</th><th>Expected By</th><th>Days Override</th></tr></thead>
+        <tbody>${unRows}</tbody>
+      </table></div>
+    </div>`;
+  }
+
+  container.innerHTML = html || `<div class="card"><div class="empty">No outstanding invoices to project</div></div>`;
+}
+
+function cfSetOverride(invNo, days){
+  cfOverrides[invNo] = +days;
+  renderCashflow();
+}
+
+// ── START ─────────────────────────────────────────────────────────────────
+init();
 </script>
 </body>
 </html>
